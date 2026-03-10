@@ -73,15 +73,20 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 def _check_entries_in_dir(
     parent_path: str, context: str, violations: List[Violation]
 ) -> None:
-    """Check both directories and .py files against BANNED_SEGMENT_NAMES."""
-    for entry in os.listdir(parent_path):
-        entry_path = os.path.join(parent_path, entry)
+    """Check both directories and .py files against BANNED_SEGMENT_NAMES at depth=1."""
+    try:
+        entries = os.listdir(parent_path)
+    except OSError:
+        return
 
+    for entry in entries:
         if entry.startswith("_"):
             continue
 
+        entry_path = os.path.join(parent_path, entry)
+
+        # Checking directories
         if os.path.isdir(entry_path):
-            # Проверяем имя папки-сегмента
             if entry in BANNED_SEGMENT_NAMES:
                 violations.append(
                     Violation(
@@ -92,8 +97,8 @@ def _check_entries_in_dir(
                         f"Use 'lib', 'ui', 'api', 'model', or 'config' instead.",
                     )
                 )
+        # Checking .py files (acting as segments)
         elif entry.endswith(".py"):
-            # Проверяем .py файлы — utils.py так же плох, как и utils/
             file_stem = entry[:-3]
             if file_stem in BANNED_SEGMENT_NAMES:
                 violations.append(

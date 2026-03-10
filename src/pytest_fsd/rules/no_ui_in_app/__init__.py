@@ -46,7 +46,13 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
-                    tree = ast.parse(f.read(), filename=file_path)
+                    content = f.read()
+
+                # Blind Spot 7 Optimization: Skip AST parsing if no UI keywords are present
+                if not any(ui_lib in content for ui_lib in FORBIDDEN_UI_MODULES):
+                    continue
+
+                tree = ast.parse(content, filename=file_path)
             except Exception:
                 continue
 

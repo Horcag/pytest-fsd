@@ -25,13 +25,21 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     if not os.path.isdir(shared_path):
         return violations
 
-    shared_segment_names = {
-        d
-        for d in os.listdir(shared_path)
-        if os.path.isdir(os.path.join(shared_path, d)) and not d.startswith("_")
-    }
+    # Собираем имена компонентов (слайсов) внутри сегментов shared
+    # Например: shared/ui/button -> регистрируем 'button' (внутри сегмента 'ui')
+    shared_slices: dict[str, str] = {}
+    for segment in os.listdir(shared_path):
+        segment_path = os.path.join(shared_path, segment)
+        if not os.path.isdir(segment_path) or segment.startswith("_"):
+            continue
 
-    if not shared_segment_names:
+        for shared_slice in os.listdir(segment_path):
+            if os.path.isdir(
+                os.path.join(segment_path, shared_slice)
+            ) and not shared_slice.startswith("_"):
+                shared_slices[shared_slice] = segment
+
+    if not shared_slices:
         return violations
 
     # Проверяем слайсы во всех слоях
@@ -47,13 +55,14 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             if not os.path.isdir(slice_path) or slice_name.startswith("_"):
                 continue
 
-            if slice_name in shared_segment_names:
+            if slice_name in shared_slices:
+                conflict_segment = shared_slices[slice_name]
                 violations.append(
                     Violation(
                         rule=RULE_NAME,
                         file_path=slice_path,
                         message=f"Slice '{slice_name}' in layer '{layer}' has the same name as "
-                        f"segment 'shared/{slice_name}'. This creates ambiguity about "
+                        f"component 'shared/{conflict_segment}/{slice_name}'. This creates ambiguity about "
                         f"where new code should be placed.",
                     )
                 )

@@ -1,12 +1,6 @@
 import os
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import tomli as tomllib  # For older Pythons
-    except ImportError:
-        tomllib = None
+import tomllib
 
 from dataclasses import dataclass, field
 
@@ -45,12 +39,6 @@ def load_config(root_dir: str) -> FsdConfig:
 
     if not os.path.exists(pyproject_path):
         return FsdConfig()
-
-    if tomllib is None:
-        raise ImportError(
-            "Для чтения pyproject.toml требуется встроенный модуль 'tomllib' (Python 3.11+) "
-            "или установка библиотеки 'tomli' (pip install tomli)."
-        )
 
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)

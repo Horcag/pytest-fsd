@@ -35,13 +35,16 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 continue
 
             has_segments = False
-            for root, dirs, files in os.walk(slice_path):
-                if any(d in STANDARD_SEGMENTS for d in dirs):
+            try:
+                entries = os.listdir(slice_path)
+            except OSError:
+                continue
+
+            for entry in entries:
+                if entry in STANDARD_SEGMENTS:
                     has_segments = True
                     break
-
-                file_bodies = [f[:-3] for f in files if f.endswith(".py")]
-                if any(fb in STANDARD_SEGMENTS for fb in file_bodies):
+                if entry.endswith(".py") and entry[:-3] in STANDARD_SEGMENTS:
                     has_segments = True
                     break
 
