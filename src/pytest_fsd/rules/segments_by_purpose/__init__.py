@@ -58,40 +58,50 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         if layer == "shared":
             # В shared сегменты лежат прямо в корне слоя
-            for segment_name in os.listdir(layer_path):
-                segment_path = os.path.join(layer_path, segment_name)
-                if not os.path.isdir(segment_path) or segment_name.startswith("_"):
-                    continue
-                if segment_name in BANNED_SEGMENT_NAMES:
-                    violations.append(
-                        Violation(
-                            rule=RULE_NAME,
-                            file_path=segment_path,
-                            message=f"Segment '{segment_name}' in 'shared' describes what its "
-                            f"contents ARE, not their PURPOSE. "
-                            f"Use 'lib', 'ui', 'api', 'model', or 'config' instead.",
-                        )
-                    )
+            _check_entries_in_dir(layer_path, "shared", violations)
         else:
             # Для остальных слоев сегменты лежат внутри слайсов
             for slice_name in os.listdir(layer_path):
                 slice_path = os.path.join(layer_path, slice_name)
                 if not os.path.isdir(slice_path) or slice_name.startswith("_"):
                     continue
-
-                for segment_name in os.listdir(slice_path):
-                    segment_path = os.path.join(slice_path, segment_name)
-                    if not os.path.isdir(segment_path) or segment_name.startswith("_"):
-                        continue
-                    if segment_name in BANNED_SEGMENT_NAMES:
-                        violations.append(
-                            Violation(
-                                rule=RULE_NAME,
-                                file_path=segment_path,
-                                message=f"Segment '{segment_name}' inside slice '{slice_name}' "
-                                f"describes its nature rather than purpose. "
-                                f"Use 'ui', 'model', 'api', 'lib', or 'config' instead.",
-                            )
-                        )
+                _check_entries_in_dir(slice_path, slice_name, violations)
 
     return violations
+
+
+def _check_entries_in_dir(
+    parent_path: str, context: str, violations: List[Violation]
+) -> None:
+    """Check both directories and .py files against BANNED_SEGMENT_NAMES."""
+    for entry in os.listdir(parent_path):
+        entry_path = os.path.join(parent_path, entry)
+
+        if entry.startswith("_"):
+            continue
+
+        if os.path.isdir(entry_path):
+            # Проверяем имя папки-сегмента
+            if entry in BANNED_SEGMENT_NAMES:
+                violations.append(
+                    Violation(
+                        rule=RULE_NAME,
+                        file_path=entry_path,
+                        message=f"Segment '{entry}' in '{context}' describes what its "
+                        f"contents ARE, not their PURPOSE. "
+                        f"Use 'lib', 'ui', 'api', 'model', or 'config' instead.",
+                    )
+                )
+        elif entry.endswith(".py"):
+            # Проверяем .py файлы — utils.py так же плох, как и utils/
+            file_stem = entry[:-3]
+            if file_stem in BANNED_SEGMENT_NAMES:
+                violations.append(
+                    Violation(
+                        rule=RULE_NAME,
+                        file_path=entry_path,
+                        message=f"File '{entry}' in '{context}' uses a banned segment name "
+                        f"'{file_stem}'. Rename to describe purpose, not nature "
+                        f"(e.g., 'lib/', 'model/', 'config/').",
+                    )
+                )

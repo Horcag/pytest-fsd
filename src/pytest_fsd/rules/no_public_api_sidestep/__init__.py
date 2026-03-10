@@ -46,15 +46,26 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             imports = get_imports_from_file(file_path)
 
             for lineno, module_path in imports:
-                if not module_path.startswith(f"{base_module}."):
-                    continue
-
                 import_parts = module_path.split(".")
-                if len(import_parts) < 3:
+
+                # Определяем, где в импорте начинается layer/slice
+                if module_path.startswith(f"{base_module}."):
+                    # Стандартный вариант: "src.features.auth.model.handler"
+                    # Пропускаем base_module prefix
+                    layer_idx = 1
+                elif import_parts[0] in sliced_layers:
+                    # Альтернативный вариант: "features.auth.model.handler"
+                    # (PYTHONPATH указывает на src/)
+                    layer_idx = 0
+                else:
                     continue
 
-                target_layer = import_parts[1]
-                target_slice = import_parts[2]
+                remaining = import_parts[layer_idx:]
+                if len(remaining) < 2:
+                    continue
+
+                target_layer = remaining[0]
+                target_slice = remaining[1]
 
                 if target_layer not in sliced_layers:
                     continue
@@ -63,8 +74,8 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 if current_layer == target_layer and current_slice == target_slice:
                     continue
 
-                # Длина > 3 означает глубокий импорт (src.layer.slice.internal)
-                if len(import_parts) > 3:
+                # Длина > 2 (layer + slice + internal) → глубокий импорт
+                if len(remaining) > 2:
                     violations.append(
                         Violation(
                             rule=RULE_NAME,

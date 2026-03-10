@@ -22,6 +22,7 @@ from .rules import (
     public_api,
     repetitive_naming,
     segments_by_purpose,
+    unknown_folders_in_root,
 )
 from .rules import (
     excessive_slicing,
@@ -43,6 +44,7 @@ CORE_RULES = [
     ambiguous_slice_names,
     no_segments_on_sliced_layers,
     public_api,
+    unknown_folders_in_root,
 ]
 
 # Дополнительные правила — включаются через extra_rules в pyproject.toml
