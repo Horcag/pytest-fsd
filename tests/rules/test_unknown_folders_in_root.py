@@ -1,0 +1,42 @@
+# tests/rules/test_unknown_folders_in_root.py
+"""Tests for the unknown-folders-in-root rule."""
+from pytest_fsd.config import load_config
+from pytest_fsd.rules.unknown_folders_in_root import RULE_NAME, check
+
+
+def test_unknown_folders_clean(create_project):
+    """No errors when all root folders are known layers."""
+    project_root = create_project(
+        """
+        📂 app
+        📂 features
+          📂 auth
+            📄 __init__.py
+        📂 shared
+          📂 ui
+            📄 __init__.py
+        """
+    )
+    config = load_config(str(project_root))
+    violations = check(config, str(project_root))
+    assert violations == []
+
+
+def test_unknown_folders_typo(create_project):
+    """Error when a root folder is not a known layer (typo detection)."""
+    project_root = create_project(
+        """
+        📂 app
+        📂 fietures
+          📂 auth
+            📄 __init__.py
+        📂 shared
+          📂 ui
+            📄 __init__.py
+        """
+    )
+    config = load_config(str(project_root))
+    violations = check(config, str(project_root))
+    assert len(violations) == 1
+    assert violations[0].rule == RULE_NAME
+    assert "fietures" in violations[0].message

@@ -49,7 +49,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                     .should_not_import(*forbidden_modules)
                     .check(base_path)
                 )
-            except AssertionError as e:
+            except BaseException as e:
                 violations.append(
                     Violation(
                         rule=RULE_NAME,
