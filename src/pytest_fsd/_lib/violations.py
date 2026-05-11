@@ -2,6 +2,7 @@
 """Unified violation dataclass for all FSD rules."""
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -11,7 +12,7 @@ class Violation:
     rule: str
     file_path: str
     message: str
-    line_number: int | None = None
+    line_number: Optional[int] = None
 
     def format(self) -> str:
         """Format the violation as a human-readable string."""

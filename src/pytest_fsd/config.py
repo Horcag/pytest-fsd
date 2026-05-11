@@ -1,8 +1,12 @@
 import os
 
-import tomllib
-
 from dataclasses import dataclass, field
+from typing import List
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 
 @dataclass
@@ -10,7 +14,7 @@ class FsdConfig:
     """Configuration for pytest-fsd, read from [tool.pytest_fsd] in pyproject.toml."""
 
     base_path: str = "src"
-    layers: list[str] = field(
+    layers: List[str] = field(
         default_factory=lambda: [
             "app",
             "pages",
@@ -20,8 +24,8 @@ class FsdConfig:
             "shared",
         ]
     )
-    ignore_paths: list[str] = field(default_factory=list)
-    extra_rules: list[str] = field(default_factory=list)
+    ignore_paths: List[str] = field(default_factory=list)
+    extra_rules: List[str] = field(default_factory=list)
 
 
 # Доступные дополнительные правила

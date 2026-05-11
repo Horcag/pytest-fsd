@@ -6,7 +6,7 @@ For example, if shared/i18n exists, having features/i18n is confusing.
 """
 
 import os
-from typing import List
+from typing import Dict, List
 
 from ..._lib.fs_utils import get_sliced_layers
 from ..._lib.violations import Violation
@@ -27,7 +27,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
     # Собираем имена компонентов (слайсов) внутри сегментов shared
     # Например: shared/ui/button -> регистрируем 'button' (внутри сегмента 'ui')
-    shared_slices: dict[str, str] = {}
+    shared_slices: Dict[str, str] = {}
     for segment in os.listdir(shared_path):
         segment_path = os.path.join(shared_path, segment)
         if not os.path.isdir(segment_path) or segment.startswith("_"):

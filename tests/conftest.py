@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Optional
 
 import pytest
 
@@ -50,7 +51,7 @@ def create_project(tmp_path: Path):
     Fixture to create a temporary FSD project structure.
     Returns a function that takes a tree string and optional extra pyproject.toml content.
     """
-    def _create_project(tree_str: str, extra_rules: list[str] | None = None) -> Path:
+    def _create_project(tree_str: str, extra_rules: Optional[List[str]] = None) -> Path:
         src_dir = tmp_path / "src"
         src_dir.mkdir(exist_ok=True)
 
