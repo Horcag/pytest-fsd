@@ -8,6 +8,7 @@ Default threshold: 15 files.
 import os
 from typing import List
 
+from ..._lib.fs_utils import get_layer_by_canonical_name
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -19,7 +20,12 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     """Verify that shared/lib doesn't have too many ungrouped files."""
     violations = []
     base_dir = os.path.join(project_root, config.base_path)
-    lib_path = os.path.join(base_dir, "shared", "lib")
+
+    shared_layer = get_layer_by_canonical_name(config, "shared")
+    if not shared_layer:
+        return violations
+
+    lib_path = os.path.join(base_dir, shared_layer, "lib")
 
     if not os.path.isdir(lib_path):
         return violations

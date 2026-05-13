@@ -9,6 +9,7 @@ import ast
 import os
 from typing import List
 
+from ..._lib.fs_utils import get_layer_by_canonical_name
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -30,10 +31,11 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     violations = []
     base_dir = os.path.join(project_root, config.base_path)
 
-    if "app" not in config.layers:
+    app_layer = get_layer_by_canonical_name(config, "app")
+    if not app_layer:
         return violations
 
-    app_path = os.path.join(base_dir, "app")
+    app_path = os.path.join(base_dir, app_layer)
     if not os.path.isdir(app_path):
         return violations
 

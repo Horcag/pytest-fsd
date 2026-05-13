@@ -10,7 +10,7 @@ from typing import List
 
 from pytest_archon import archrule
 
-from ..._lib.fs_utils import get_slices
+from ..._lib.fs_utils import get_slices, get_canonical_layer
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -24,7 +24,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
     for layer in config.layers:
         # В shared слайсы могут зависеть друг от друга
-        if layer == "shared":
+        if get_canonical_layer(layer) == "shared":
             continue
 
         slices = get_slices(layer, os.path.join(project_root, base_path))

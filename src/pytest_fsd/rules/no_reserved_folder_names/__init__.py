@@ -8,7 +8,7 @@ as other conventional segments (ui, model, api, lib, config).
 import os
 from typing import List
 
-from ..._lib.fs_utils import STANDARD_SEGMENTS
+from ..._lib.fs_utils import STANDARD_SEGMENTS, get_canonical_layer
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -26,10 +26,11 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
         if not os.path.isdir(layer_path):
             continue
 
-        if layer == "shared":
+        canonical = get_canonical_layer(layer)
+        if canonical == "shared":
             # В shared сегменты — прямые дочерние папки
-            _check_segments_subfolders(layer_path, "shared", violations)
-        elif layer != "app":
+            _check_segments_subfolders(layer_path, layer, violations)
+        elif canonical != "app":
             # В слайсовых слоях сегменты лежат внутри слайсов
             for slice_name in os.listdir(layer_path):
                 slice_path = os.path.join(layer_path, slice_name)

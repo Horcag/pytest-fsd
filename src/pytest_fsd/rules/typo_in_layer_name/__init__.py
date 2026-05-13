@@ -1,6 +1,6 @@
-# src/pytest_fsd/rules/unknown_folders_in_root/__init__.py
+# src/pytest_fsd/rules/typo_in_layer_name/__init__.py
 """
-[Rule: unknown-folders-in-root]
+[Rule: typo-in-layer-name]
 Warn about directories in base_path that are not listed in config.layers
 and not in ignore_paths. Catches typos like 'fietures' instead of 'features'.
 """
@@ -11,7 +11,7 @@ from typing import List
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
-RULE_NAME = "unknown-folders-in-root"
+RULE_NAME = "typo-in-layer-name"
 
 # Папки, которые всегда следует игнорировать (не FSD-слои)
 _ALWAYS_IGNORED = {"__pycache__", ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache"}

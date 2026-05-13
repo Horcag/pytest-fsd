@@ -1,10 +1,10 @@
-# tests/rules/test_unknown_folders_in_root.py
-"""Tests for the unknown-folders-in-root rule."""
+# tests/rules/test_typo_in_layer_name.py
+"""Tests for the typo-in-layer-name rule."""
 from pytest_fsd.config import load_config
-from pytest_fsd.rules.unknown_folders_in_root import RULE_NAME, check
+from pytest_fsd.rules.typo_in_layer_name import RULE_NAME, check
 
 
-def test_unknown_folders_clean(create_project):
+def test_typo_in_layer_name_clean(create_project):
     """No errors when all root folders are known layers."""
     project_root = create_project(
         """
@@ -22,7 +22,7 @@ def test_unknown_folders_clean(create_project):
     assert violations == []
 
 
-def test_unknown_folders_typo(create_project):
+def test_typo_in_layer_name_typo(create_project):
     """Error when a root folder is not a known layer (typo detection)."""
     project_root = create_project(
         """

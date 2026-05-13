@@ -8,6 +8,7 @@ not their nature (utils, helpers, components, hooks).
 import os
 from typing import List
 
+from ..._lib.fs_utils import get_canonical_layer
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -49,16 +50,17 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     ignored_layers = ("app",)
 
     for layer in config.layers:
-        if layer in ignored_layers:
+        canonical = get_canonical_layer(layer)
+        if canonical in ignored_layers:
             continue
 
         layer_path = os.path.join(base_dir, layer)
         if not os.path.isdir(layer_path):
             continue
 
-        if layer == "shared":
+        if canonical == "shared":
             # В shared сегменты лежат прямо в корне слоя
-            _check_entries_in_dir(layer_path, "shared", violations)
+            _check_entries_in_dir(layer_path, layer, violations)
         else:
             # Для остальных слоев сегменты лежат внутри слайсов
             for slice_name in os.listdir(layer_path):

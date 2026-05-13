@@ -1,29 +1,35 @@
 # `typo-in-layer-name`
 
-> 🔶 **Covered by configuration.** This rule is enforced by the `[tool.pytest_fsd].layers` section in `pyproject.toml`.
+Warn about directories inside `base_path` (e.g., `src/`) that are not listed in `[tool.pytest_fsd].layers`.
 
-Ensure that all layer directories are named correctly without typos.
+This catches typos like `fietures/` (instead of `features/`), or stale layer folders that were renamed but not cleaned up.
 
-## How it works
+## Examples
 
-When you explicitly list your layers in `pyproject.toml`, `pytest-fsd` only recognizes those exact names. Any typo in a layer folder name (e.g., `fietures` instead of `features`) simply won't be checked — and the `no-segmentless-slices` rule will flag the content as unstructured.
+✅ Pass (all directories are known layers):
 
-## Configuration
+```text
+📂 src/
+  📂 app/         # ← in layers
+  📂 features/    # ← in layers
+  📂 shared/      # ← in layers
+```
+
+❌ Fail:
+
+```text
+📂 src/
+  📂 app/
+  📂 fietures/    # ❌ typo — not in layers
+  📂 shared/
+```
+
+## How to fix
+
+- If a typo: rename the directory to the correct layer name.
+- If intentional (non-FSD directory): add it to `ignore_paths` in `pyproject.toml`:
 
 ```toml
 [tool.pytest_fsd]
-layers = ["app", "windows", "widgets", "features", "entities", "shared"]
-#         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#         Only these exact names are recognized as valid FSD layers.
-#         A directory "fietures" would be ignored entirely.
+ignore_paths = ["scripts", "migrations"]
 ```
-
-## Steiger Equivalent
-
-```text
-📂 shraed/     # ❌ typo — Steiger would flag this
-📂 fietures/   # ❌ typo
-📂 entities/   # ✅ correct
-```
-
-In `pytest-fsd`, if `fietures/` is not in the `layers` list, it is unseen by the tool. Running `pytest-fsd` with the correct `layers` config implicitly enforces proper naming.

@@ -8,7 +8,7 @@ that serves as its public API definition.
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.fs_utils import get_layer_by_canonical_name, get_sliced_layers
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -44,22 +44,41 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 )
 
     # Проверяем сегменты в shared
-    shared_path = os.path.join(base_dir, "shared")
-    if os.path.isdir(shared_path):
-        for segment_name in os.listdir(shared_path):
-            segment_path = os.path.join(shared_path, segment_name)
-            if not os.path.isdir(segment_path) or segment_name.startswith("_"):
-                continue
+    shared_layer = get_layer_by_canonical_name(config, "shared")
+    if shared_layer:
+        shared_path = os.path.join(base_dir, shared_layer)
+        if os.path.isdir(shared_path):
+            for segment_name in os.listdir(shared_path):
+                segment_path = os.path.join(shared_path, segment_name)
+                if not os.path.isdir(segment_path) or segment_name.startswith("_"):
+                    continue
 
-            init_file = os.path.join(segment_path, "__init__.py")
-            if not os.path.exists(init_file):
-                violations.append(
-                    Violation(
-                        rule=RULE_NAME,
-                        file_path=segment_path,
-                        message=f"Segment '{segment_name}' in 'shared' is missing "
-                        f"__init__.py (Public API). Every shared segment must declare its public API.",
-                    )
-                )
+                if segment_name in ("ui", "lib"):
+                    # Для shared/ui и shared/lib __init__.py в корне не обязателен
+                    # Но если внутри есть подпапки, они должны иметь __init__.py
+                    for child in os.listdir(segment_path):
+                        child_path = os.path.join(segment_path, child)
+                        if os.path.isdir(child_path) and not child.startswith("_"):
+                            child_init = os.path.join(child_path, "__init__.py")
+                            if not os.path.exists(child_init):
+                                violations.append(
+                                    Violation(
+                                        rule=RULE_NAME,
+                                        file_path=child_path,
+                                        message=f"Subfolder '{child}' in 'shared/{segment_name}' is missing "
+                                        f"__init__.py (Public API).",
+                                    )
+                                )
+                else:
+                    init_file = os.path.join(segment_path, "__init__.py")
+                    if not os.path.exists(init_file):
+                        violations.append(
+                            Violation(
+                                rule=RULE_NAME,
+                                file_path=segment_path,
+                                message=f"Segment '{segment_name}' in 'shared' is missing "
+                                f"__init__.py (Public API). Every shared segment must declare its public API.",
+                            )
+                        )
 
     return violations

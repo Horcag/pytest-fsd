@@ -2,6 +2,7 @@
 """Shared filesystem utilities used by multiple rules."""
 
 import os
+import re
 from typing import List
 
 from ..config import FsdConfig
@@ -10,12 +11,26 @@ from ..config import FsdConfig
 STANDARD_SEGMENTS = ("ui", "model", "api", "lib", "config")
 
 
+def get_canonical_layer(layer_name: str) -> str:
+    """Return the layer name without ordering prefixes (e.g., '6_shared' -> 'shared')."""
+    # Remove leading digits and underscores
+    return re.sub(r"^[0-9_]+", "", layer_name)
+
+
+def get_layer_by_canonical_name(config: FsdConfig, name: str) -> str | None:
+    """Find the actual layer name in config that matches the canonical name."""
+    for layer in config.layers:
+        if get_canonical_layer(layer) == name:
+            return layer
+    return None
+
+
 def get_sliced_layers(config: FsdConfig) -> List[str]:
     """Return layers that contain slices (excluding app and shared)."""
     return [
         layer_name
         for layer_name in config.layers
-        if layer_name not in ("app", "shared")
+        if get_canonical_layer(layer_name) not in ("app", "shared")
     ]
 
 

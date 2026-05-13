@@ -1,22 +1,24 @@
+[🇷🇺 Читать на русском](README.ru.md)
+
 # pytest-fsd
 
 **FSD Architecture Validation for Python Projects.**
 
-`pytest-fsd` автоматически проверяет архитектуру вашего Python-проекта на соответствие методологии [Feature-Sliced Design](https://feature-sliced.design/).
+`pytest-fsd` automatically checks your Python project's architecture for compliance with the [Feature-Sliced Design](https://feature-sliced.design/) methodology.
 
-Использует гибридный подход: динамические проверки через [pytest-archon](https://pypi.org/project/pytest-archon/) + статический AST-анализ + проверка файловой структуры.
+It uses a hybrid approach: dynamic checks via [pytest-archon](https://pypi.org/project/pytest-archon/) + static AST analysis + file structure verification.
 
-## Установка
+## Installation
 
 ```bash
 pip install pytest-fsd
-# или
+# or
 uv add --dev pytest-fsd
 ```
 
-## Использование
+## Usage
 
-### 1. Настройка `pyproject.toml`
+### 1. Configure `pyproject.toml`
 
 ```toml
 [tool.pytest_fsd]
@@ -24,7 +26,7 @@ base_path = "src"
 layers = ["app", "windows", "widgets", "features", "entities", "shared"]
 ```
 
-### 2. Создание теста
+### 2. Create a test
 
 ```python
 # tests/test_architecture.py
@@ -34,104 +36,104 @@ def test_project_architecture():
     validate_fsd_architecture()
 ```
 
-### 3. Запуск
+### 3. Run
 
 ```bash
 pytest tests/test_architecture.py -vv
 ```
 
-## Архитектура библиотеки
+## Library Architecture
 
-Каждое правило — это папка внутри `src/pytest_fsd/rules/<rule_name>/` с:
+Each rule is a folder inside `src/pytest_fsd/rules/<rule_name>/` containing:
 
-- `__init__.py` — логика проверки (функция `check(config, project_root) -> List[Violation]`)
-- `README.md` — описание правила, примеры, rationale
+- `__init__.py` — verification logic (the function `check(config, project_root) -> List[Violation]`)
+- `README.md` — rule description, examples, and rationale
 
 ```
 src/pytest_fsd/
-  __init__.py           # Фасад: validate_fsd_architecture()
-  config.py             # Чтение [tool.pytest_fsd] из pyproject.toml
-  _lib/                 # Общие утилиты
-    violations.py       # Единый Violation dataclass
-    ast_utils.py        # AST-парсинг импортов
-    fs_utils.py         # Файловые утилиты, константы сегментов
+  __init__.py           # Facade: validate_fsd_architecture()
+  config.py             # Reads [tool.pytest_fsd] from pyproject.toml
+  _lib/                 # Shared utilities
+    violations.py       # Unified Violation dataclass
+    ast_utils.py        # AST parsing for imports
+    fs_utils.py         # File utilities, segment constants
   rules/
-    forbidden_imports/          # pytest-archon: слои импортируют только нижележащие
-    no_cross_imports/           # pytest-archon: слайсы в одном слое независимы
-    no_public_api_sidestep/     # AST: импорт только через __init__.py слайса
-    no_layer_public_api/        # FS: слоевые папки без __init__.py
-    no_ui_in_app/               # AST: запрет UI-фреймворков в app
-    repetitive_naming/          # FS: файлы не дублируют имя слайса
-    no_segmentless_slices/      # FS: слайс содержит хотя бы один сегмент
-    segments_by_purpose/        # FS: запрет utils/helpers/components/hooks
-    ambiguous_slice_names/      # FS: имена слайсов ≠ имена сегментов shared
-    no_segments_on_sliced_layers/ # FS: в слайсовых слоях не должно быть сегментов напрямую
-    public_api/                 # FS: каждый слайс должен иметь __init__.py
+    forbidden_imports/          # pytest-archon: layers only import from layers below
+    no_cross_imports/           # pytest-archon: slices within the same layer are independent
+    no_public_api_sidestep/     # AST: importing from another slice is only allowed via its __init__.py
+    no_layer_public_api/        # FS: layer folders must not contain __init__.py
+    no_ui_in_app/               # AST: forbids importing UI frameworks directly into app
+    repetitive_naming/          # FS: files do not duplicate the slice name
+    no_segmentless_slices/      # FS: a slice must contain at least one standard segment
+    segments_by_purpose/        # FS: forbids utils/helpers/components/hooks
+    ambiguous_slice_names/      # FS: slice names must not match segment names in shared
+    no_segments_on_sliced_layers/ # FS: sliced layers must not contain segments directly
+    public_api/                 # FS: every slice must have an __init__.py
 ```
 
 ---
 
-## Матрица покрытия правил Steiger
+## Steiger Rules Coverage Matrix
 
-Полный список правил из [Steiger FSD Plugin](https://github.com/feature-sliced/steiger) и их статус в `pytest-fsd`:
+Full list of rules from the [Steiger FSD Plugin](https://github.com/feature-sliced/steiger) and their status in `pytest-fsd`:
 
-| #   | Steiger Rule                                    | pytest-fsd Status      | Описание                                                                               |
-| --- | ----------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------- |
-| 1   | `forbidden-imports` / `no-higher-level-imports` | ✅ **Полностью**       | Слои импортируют только нижележащие слои                                               |
-| 2   | `no-cross-imports`                              | ✅ **Полностью**       | Слайсы в одном слое независимы друг от друга                                           |
-| 3   | `no-public-api-sidestep`                        | ✅ **Полностью**       | Импорт из чужого слайса только через `__init__.py`                                     |
-| 4   | `public-api`                                    | ✅ **Полностью**       | Каждый слайс и сегмент shared обязан иметь `__init__.py`                               |
-| 5   | `no-layer-public-api`                           | ✅ **Полностью**       | Папки слоев (`features/`, `entities/`) не должны содержать `__init__.py`               |
-| 6   | `segments-by-purpose`                           | ✅ **Полностью**       | Запрет `utils`, `helpers`, `hooks`, `components`, `modals`, `types`, `constants` и др. |
-| 7   | `no-segmentless-slices`                         | ✅ **Полностью**       | Слайс обязан содержать хотя бы один стандартный сегмент                                |
-| 8   | `repetitive-naming`                             | ✅ **Полностью**       | Файлы не дублируют имя слайса (`user/user_model.py` → `user/model.py`)                 |
-| 9   | `no-ui-in-app`                                  | ✅ **Полностью**       | Слой `app` не должен импортировать UI-фреймворки                                       |
-| 10  | `ambiguous-slice-names`                         | ✅ **Полностью**       | Имена слайсов не совпадают с сегментами `shared/`                                      |
-| 11  | `no-segments-on-sliced-layers`                  | ✅ **Полностью**       | В слайсовых слоях нет прямых папок-сегментов                                           |
-| 12  | `inconsistent-naming`                           | 🔶 **Ruff**            | Обеспечивается плагином `N` (pep8-naming) в `Ruff`                                     |
-| 13  | `import-locality`                               | 🔶 **Ruff**            | Обеспечивается плагином `TID` (flake8-tidy-imports) в `Ruff`                           |
-| 14  | `typo-in-layer-name`                            | 🔶 **Конфигурация**    | Покрывается блоком `[tool.pytest_fsd].layers` в `pyproject.toml`                       |
-| 15  | `no-processes`                                  | 🔶 **Конфигурация**    | Слой `processes` deprecated; просто не включайте его в `layers`                        |
-| 16  | `excessive-slicing`                             | ⚡ **Опционально**     | Более 20 слайсов в одном слое (порог: 20)                                              |
-| 17  | `insignificant-slice`                           | 🟡 **Ручная проверка** | Требует анализа графа импортов для определения "незначительных" слайсов                |
-| 18  | `no-file-segments`                              | ⚡ **Опционально**     | Сегмент как файл (`model.py`) вместо папки (`model/`)                                  |
-| 19  | `shared-lib-grouping`                           | ⚡ **Опционально**     | Более 15 файлов в `shared/lib` без группировки                                         |
-| 20  | `no-reserved-folder-names`                      | ⚡ **Опционально**     | Подпапки в сегментах не должны совпадать с именами сегментов                           |
+| #   | Steiger Rule                                    | pytest-fsd Status      | Description                                                                               |
+| --- | ----------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | `forbidden-imports` / `no-higher-level-imports` | ✅ **Complete**       | Layers only import from layers below them                                                 |
+| 2   | `no-cross-imports`                              | ✅ **Complete**       | Slices within the same layer are independent of each other                                |
+| 3   | `no-public-api-sidestep`                        | ✅ **Complete**       | Importing from another slice is only allowed via `__init__.py`                            |
+| 4   | `public-api`                                    | ✅ **Complete**       | Every slice and shared segment must have an `__init__.py`                                 |
+| 5   | `no-layer-public-api`                           | ✅ **Complete**       | Layer folders (`features/`, `entities/`) must not contain `__init__.py`                   |
+| 6   | `segments-by-purpose`                           | ✅ **Complete**       | Forbids `utils`, `helpers`, `hooks`, `components`, `modals`, `types`, `constants`, etc.   |
+| 7   | `no-segmentless-slices`                         | ✅ **Complete**       | A slice must contain at least one standard segment                                        |
+| 8   | `repetitive-naming`                             | ✅ **Complete**       | Files do not duplicate the slice name (`user/user_model.py` → `user/model.py`)            |
+| 9   | `no-ui-in-app`                                  | ✅ **Complete**       | The `app` layer must not import UI frameworks                                             |
+| 10  | `ambiguous-slice-names`                         | ✅ **Complete**       | Slice names must not match segment names in `shared/`                                     |
+| 11  | `no-segments-on-sliced-layers`                  | ✅ **Complete**       | Sliced layers do not have direct segment folders                                          |
+| 12  | `inconsistent-naming`                           | 🔶 **Ruff**            | Enforced by the `N` (pep8-naming) plugin in `Ruff`                                        |
+| 13  | `import-locality`                               | 🔶 **Ruff**            | Enforced by the `TID` (flake8-tidy-imports) plugin in `Ruff`                              |
+| 14  | `typo-in-layer-name`                            | ✅ **Complete**       | Forbids unknown layer folders (e.g., `fietures` instead of `features`) in the root        |
+| 15  | `no-processes`                                  | 🔶 **Configuration**   | The `processes` layer is deprecated; simply do not include it in `layers`                 |
+| 16  | `excessive-slicing`                             | ⚡ **Optional**        | More than 20 slices in one layer (threshold: 20)                                          |
+| 17  | `insignificant-slice`                           | 🟡 **Manual check**    | Requires import graph analysis to determine "insignificant" slices                        |
+| 18  | `no-file-segments`                              | ⚡ **Optional**        | A segment as a file (`model.py`) instead of a folder (`model/`)                           |
+| 19  | `shared-lib-grouping`                           | ⚡ **Optional**        | More than 15 ungrouped files in `shared/lib`                                              |
+| 20  | `no-reserved-folder-names`                      | ⚡ **Optional**        | Subfolders in segments must not match segment names                                       |
 
-### Легенда
+### Legend
 
-| Статус                     | Значение                                                                                            |
+| Status                     | Meaning                                                                                             |
 | -------------------------- | --------------------------------------------------------------------------------------------------- |
-| ✅ **Полностью**           | Правило полностью автоматизировано и выполняется при каждом запуске `pytest`                        |
-| ⚡ **Опционально**         | Правило автоматизировано, но включается через `extra_rules` в `pyproject.toml`                      |
-| 🔶 **Ruff / Конфигурация** | Покрывается внешними инструментами (`Ruff`) или конфигурацией `pyproject.toml`                      |
-| 🟡 **Ручная проверка**     | Требует субъективной оценки или сложного анализа, который лучше производить вручную при code review |
+| ✅ **Complete**           | The rule is fully automated and runs every time `pytest` is executed                                |
+| ⚡ **Optional**         | The rule is automated but is enabled via `extra_rules` in `pyproject.toml`                          |
+| 🔶 **Ruff / Configuration** | Covered by external tools (`Ruff`) or `pyproject.toml` configuration                                |
+| 🟡 **Manual check**     | Requires subjective evaluation or complex analysis better suited for manual code review             |
 
 ---
 
-## Включение дополнительных правил
+## Enabling Optional Rules
 
-Добавьте в `pyproject.toml`:
+Add to `pyproject.toml`:
 
 ```toml
 [tool.pytest_fsd]
 base_path = "src"
 layers = ["app", "windows", "widgets", "features", "entities", "shared"]
 extra_rules = [
-    "excessive-slicing",       # ≤ 20 слайсов на слой
-    "shared-lib-grouping",     # ≤ 15 файлов в shared/lib
-    "no-file-segments",        # Сегменты должны быть папками, не файлами
-    "no-reserved-folder-names" # Подпапки сегментов не могут называться ui/model/api/lib/config
+    "excessive-slicing",       # ≤ 20 slices per layer
+    "shared-lib-grouping",     # ≤ 15 files in shared/lib
+    "no-file-segments",        # Segments must be folders, not files
+    "no-reserved-folder-names" # Segment subfolders cannot be named ui/model/api/lib/config
 ]
 ```
 
-Каждое правило подробно описано в `src/pytest_fsd/rules/<rule_name>/README.md`.
+Each rule is described in detail in `src/pytest_fsd/rules/<rule_name>/README.md`.
 
 ---
 
-## Настройка Ruff для смежных правил
+## Configuring Ruff for Related Rules
 
-Для полного покрытия FSD-правил, которые Steiger проверяет на уровне линтинга (и которые `pytest-fsd` не дублирует), добавьте в `pyproject.toml`:
+For full coverage of FSD rules that Steiger checks at the linting level (which `pytest-fsd` does not duplicate), add to `pyproject.toml`:
 
 ```toml
 [tool.ruff.lint]
@@ -141,20 +143,20 @@ select = ["N", "TID"]
 ban-relative-imports = "parents"
 ```
 
-| Ruff Plugin                 | Steiger Rule          | Что проверяет                                   |
+| Ruff Plugin                 | Steiger Rule          | What it checks                                  |
 | --------------------------- | --------------------- | ----------------------------------------------- |
-| `N` (pep8-naming)           | `inconsistent-naming` | `snake_case` для модулей, переменных, функций   |
-| `TID` (flake8-tidy-imports) | `import-locality`     | Запрет relative imports из родительских пакетов |
+| `N` (pep8-naming)           | `inconsistent-naming` | `snake_case` for modules, variables, functions  |
+| `TID` (flake8-tidy-imports) | `import-locality`     | Forbids relative imports from parent packages   |
 
-Подробные описания и примеры конфигурации: `src/pytest_fsd/rules/inconsistent_naming/README.md` и `src/pytest_fsd/rules/import_locality/README.md`.
+Detailed descriptions and configuration examples: `src/pytest_fsd/rules/inconsistent_naming/README.md` and `src/pytest_fsd/rules/import_locality/README.md`.
 
-## Известные ограничения (Known Limitations)
+## Known Limitations
 
-- **`TYPE_CHECKING` импорты**: Правила, использующие `pytest-archon` (например, `forbidden-imports` и `no-cross-imports`), работают на базе динамического анализа графа импортов в рантайме. Импорты, находящиеся внутри блоков `if TYPE_CHECKING:`, не выполняются при загрузке модуля и, следовательно, **не видны для этих правил**.
-- **Относительные импорты**: В модуле `ast_utils.py` добавлена поддержка относительных путей для проверки `no-public-api-sidestep`, однако `Ruff` (плагин `TID`) всё равно лучше справляется с контролем относительных импортов за пределами слайсов.
-- **Динамический `__all__`**: Правило `no-public-api-sidestep` использует статический AST-анализ для извлечения `__all__` из файла `__init__.py`. Если список экспортов формируется динамически (например, `__all__ = a + b`), статический анализатор не сможет его прочитать, и инструмент может выдать ложноположительные нарушения. Экспорты в `__all__` должны быть заданы как явный список или кортеж.
-- **Минимальная версия Python**: Библиотека поддерживает Python **3.8+**. Для Python `<3.11` используется обратная совместимость через пакет `tomli`, а на Python `3.11+` — встроенный `tomllib`.
+- **`TYPE_CHECKING` imports**: Rules using `pytest-archon` (e.g., `forbidden-imports` and `no-cross-imports`) work based on dynamic import graph analysis at runtime. Imports inside `if TYPE_CHECKING:` blocks are not executed when the module loads and are therefore **not visible to these rules**.
+- **Relative imports**: The `ast_utils.py` module supports relative paths for checking `no-public-api-sidestep`, however, `Ruff` (the `TID` plugin) is still better at controlling relative imports outside of slices.
+- **Dynamic `__all__`**: The `no-public-api-sidestep` rule uses static AST analysis to extract `__all__` from the `__init__.py` file. If the export list is formed dynamically (e.g., `__all__ = a + b`), the static analyzer will not be able to read it, and the tool may yield false positive violations. Exports in `__all__` must be defined as an explicit list or tuple.
+- **Minimum Python Version**: The library supports Python **3.8+**. For Python `<3.11`, backward compatibility is provided via the `tomli` package, and on Python `3.11+` the built-in `tomllib` is used.
 
-## Лицензия
+## License
 
 MIT
