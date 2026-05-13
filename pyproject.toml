@@ -1,6 +1,6 @@
 [project]
 name = "pytest-fsd"
-version = "0.2.0"
+version = "0.2.1"
 description = "Feature-Sliced Design (FSD) architecture validation plugin for pytest"
 readme = "README.md"
 authors = [

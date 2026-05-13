@@ -31,9 +31,9 @@ def test_excessive_slicing_violation(create_project, tmp_path):
     tree_lines = []
     for i in range(21):
         tree_lines.append(f"  📂 slice_{i:02d}")
-        tree_lines.append(f"    📂 model")
-        tree_lines.append(f"      📄 __init__.py")
-        tree_lines.append(f"    📄 __init__.py")
+        tree_lines.append("    📂 model")
+        tree_lines.append("      📄 __init__.py")
+        tree_lines.append("    📄 __init__.py")
 
     tree = "📂 features\n" + "\n".join(tree_lines)
     project_root = create_project(tree, extra_rules=["excessive-slicing"])

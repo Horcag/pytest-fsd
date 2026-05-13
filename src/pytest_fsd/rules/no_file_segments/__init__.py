@@ -8,7 +8,7 @@ folder-based segments (e.g., model/ directory).
 import os
 from typing import List
 
-from ..._lib.fs_utils import STANDARD_SEGMENTS, get_sliced_layers
+from ..._lib.fs_utils import get_sliced_layers
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
