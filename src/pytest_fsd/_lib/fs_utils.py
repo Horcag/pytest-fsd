@@ -3,7 +3,7 @@
 
 import os
 import re
-from typing import List
+from typing import List, Optional
 
 from ..config import FsdConfig
 
@@ -17,7 +17,7 @@ def get_canonical_layer(layer_name: str) -> str:
     return re.sub(r"^[0-9_]+", "", layer_name)
 
 
-def get_layer_by_canonical_name(config: FsdConfig, name: str) -> str | None:
+def get_layer_by_canonical_name(config: FsdConfig, name: str) -> Optional[str]:
     """Find the actual layer name in config that matches the canonical name."""
     for layer in config.layers:
         if get_canonical_layer(layer) == name:

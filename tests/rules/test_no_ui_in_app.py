@@ -62,3 +62,17 @@ def test_no_ui_in_app_from_import(create_project):
     violations = check(config, str(project_root))
     assert len(violations) == 1
     assert "PyQt6" in violations[0].message
+
+
+def test_no_ui_in_app_rejects_ui_segment(create_project):
+    project_root = create_project(
+        """
+        📂 app
+          📂 ui
+            📄 __init__.py
+        """
+    )
+    violations = check(load_config(str(project_root)), str(project_root))
+    assert len(violations) == 1
+    assert violations[0].rule == RULE_NAME
+    assert "app/ui" in violations[0].message

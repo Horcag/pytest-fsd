@@ -1,9 +1,5 @@
 # src/pytest_fsd/rules/no_ui_in_app/__init__.py
-"""
-[Rule: no-ui-in-app]
-The app layer should not directly import UI frameworks.
-UI components belong in pages/windows/widgets layers.
-"""
+"""Reject app/ui and direct GUI framework imports in the app layer."""
 
 import ast
 import os
@@ -38,6 +34,16 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     app_path = os.path.join(base_dir, app_layer)
     if not os.path.isdir(app_path):
         return violations
+
+    ui_path = os.path.join(app_path, "ui")
+    if os.path.isdir(ui_path):
+        violations.append(
+            Violation(
+                rule=RULE_NAME,
+                file_path=ui_path,
+                message="Segment 'app/ui' is not allowed. Put UI components in pages or widgets.",
+            )
+        )
 
     for root, _, files in os.walk(app_path):
         for file in files:
