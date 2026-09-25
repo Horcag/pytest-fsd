@@ -1,38 +1,13 @@
 # `segments-by-purpose`
 
-Discourage the use of segment names that group code by its essence, and instead encourage grouping by purpose.
+FSD segment names should describe their purpose (`ui`, `model`, `api`, `lib`, `config`) rather than the kind of item inside them. The check covers direct children of slices and direct children of `shared`; it also checks `.py` files acting as segments.
 
-## Banned segment names
-
-`utils`, `util`, `helpers`, `helper`, `hooks`, `hook`, `modals`, `modal`, `components`, `component`, `types`, `type`, `interfaces`, `interface`, `containers`, `container`, `services`, `service`, `constants`, `consts`, `const`
-
-## Examples
-
-✅ Pass:
-
-```
-📂 shared/
-  📂 ui/
-  📂 lib/
-📂 entities/
-  📂 user/
-    📂 ui/
-    📂 model/
+```text
+src/features/auth/validators/  # violation
+src/features/auth/fixtures.py  # violation
+src/features/auth/model/       # allowed
 ```
 
-❌ Fail:
+The forbidden names include generic names from [Steiger FSD plugin 0.7.0](https://github.com/feature-sliced/steiger/blob/master/packages/steiger-plugin-fsd/src/segments-by-purpose/index.ts), such as `components`, `helpers`, `utils`, `types`, `services`, `stores`, `schemas`, `handlers`, `fixtures`, `middlewares`, `validators`, `resolvers`, `mutations`, and `assets`, including their singular forms. The existing Python port also checks `hook(s)` and `container(s)`. Framework-specific JavaScript terms are not all copied into this Python rule.
 
-```
-📂 shared/
-  📂 utils/       # ❌
-  📂 helpers/     # ❌
-  📂 hooks/       # ❌
-📂 entities/
-  📂 user/
-    📂 components/ # ❌
-    📂 model/
-```
-
-## Rationale
-
-Segments group code by **technical purpose**. Folder names like `components` sound like they only contain UI components, but there are other things that affect UI (formatters, browser API hooks, etc.) that share the same purpose. `hooks` is an abstract concept — it doesn't tell anything about what the function does. `utils` and `helpers` risk becoming a dumping ground for unrelated code.
+A `fixtures` directory outside the configured FSD layers is not checked.
