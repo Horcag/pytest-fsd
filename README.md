@@ -8,6 +8,8 @@
 
 Validate [Feature-Sliced Design (FSD)](https://feature-sliced.design/) architecture in a Python project using pytest. The rules are adapted from the [Steiger FSD plugin](https://github.com/feature-sliced/steiger), with Python-specific checks where appropriate. This is an independent Python package, not an official Steiger port.
 
+The applicable upstream changes are tracked through Steiger 0.7.0 / FSD plugin 0.8.0. See the [changelog](CHANGELOG.md) for Python adaptations.
+
 ## Install
 
 ```bash
@@ -61,10 +63,13 @@ extra_rules = [
     "shared-lib-grouping",      # More than 15 loose Python files in shared/lib
     "no-file-segments",         # Segments must be directories
     "no-reserved-folder-names", # No nested segment names such as model/model
+    "no-wildcard-exports",      # No `from module import *` in __init__.py
 ]
 ```
 
-`no-file-segments` is a Python package option; it is not registered as a rule in Steiger FSD plugin 0.7.0. `no-cross-imports` is enabled here for compatibility, whereas the upstream plugin does not enable it by default. These choices are intentionally different from Steiger.
+`no-wildcard-exports` was added in Steiger FSD plugin 0.8.0 and is disabled by default in both packages. It checks `__init__.py` files on every configured layer, including nested packages. Explicit module imports such as `from . import model as model` remain valid in Python. AST import diagnostics include line and character column numbers.
+
+`no-file-segments` is a Python package option; it is not registered as a rule in Steiger FSD plugin 0.8.0. `no-cross-imports` is enabled here for compatibility, whereas the upstream plugin does not enable it by default. These choices are intentionally different from Steiger.
 
 See the [rule documentation](src/pytest_fsd/rules/) for examples and details.
 

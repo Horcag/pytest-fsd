@@ -5,10 +5,11 @@ Imports from other slices must go through the slice's __init__.py (Public API),
 not through internal modules.
 """
 
+import ast
 import os
 from typing import List
 
-from ..._lib.ast_utils import get_exported_names, get_imports_from_file
+from ..._lib.ast_utils import get_exported_names, get_node_location, parse_python_file
 from ..._lib.fs_utils import get_sliced_layers
 from ..._lib.violations import Violation
 from ...config import FsdConfig
@@ -43,9 +44,19 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 parts[1] if len(parts) > 1 and current_layer in sliced_layers else None
             )
 
-            imports = get_imports_from_file(file_path)
+            parsed = parse_python_file(file_path)
+            if parsed is None:
+                continue
+            source, tree = parsed
+            imports = []
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        imports.append((node, alias.name, 0, [alias.name]))
+                elif isinstance(node, ast.ImportFrom):
+                    imports.append((node, node.module, node.level, [a.name for a in node.names]))
 
-            for lineno, module_path, level, imported_names in imports:
+            for node, module_path, level, imported_names in imports:
                 if level > 0:
                     # Разрешаем относительные импорты
                     file_dir_parts = parts[:-1]  # Убираем имя файла
@@ -112,7 +123,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                         Violation(
                             rule=RULE_NAME,
                             file_path=file_path,
-                            line_number=lineno,
+                            **get_node_location(node, source),
                             message=f"Importing internal module '{module_path}' "
                             f"from slice '{target_layer}/{target_slice}'. "
                             f"Import from '{base_module}.{target_layer}.{target_slice}' instead.",
@@ -132,7 +143,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                     Violation(
                                         rule=RULE_NAME,
                                         file_path=file_path,
-                                        line_number=lineno,
+                                        **get_node_location(node, source),
                                         message=f"Slice '{target_layer}/{target_slice}' does not define `__all__` in its __init__.py. "
                                         f"Public API exports must be explicit to prevent encapsulation bypass.",
                                     )
@@ -144,7 +155,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                             Violation(
                                                 rule=RULE_NAME,
                                                 file_path=file_path,
-                                                line_number=lineno,
+                                                **get_node_location(node, source),
                                                 message=f"Name '{name}' is not explicitly exported in "
                                                 f"'{target_layer}/{target_slice}/__init__.py'. "
                                                 f"Add it to `__all__` to make it part of the Public API.",

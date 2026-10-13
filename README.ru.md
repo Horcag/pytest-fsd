@@ -8,6 +8,8 @@
 
 Проверка архитектуры Python-проекта по [Feature-Sliced Design (FSD)](https://feature-sliced.design/) через pytest. Правила адаптированы из [FSD-плагина Steiger](https://github.com/feature-sliced/steiger); там, где необходимо, добавлены проверки для Python. Это самостоятельный пакет, а не официальный порт Steiger.
 
+Учтены применимые изменения до Steiger 0.7.0 / FSD-плагина 0.8.0. Адаптации для Python описаны в [журнале изменений](CHANGELOG.md).
+
 ## Установка
 
 ```bash
@@ -61,10 +63,13 @@ extra_rules = [
     "shared-lib-grouping",      # Более 15 отдельных Python-файлов в shared/lib
     "no-file-segments",         # Сегменты должны быть каталогами
     "no-reserved-folder-names", # Без вложенных имён сегментов вроде model/model
+    "no-wildcard-exports",      # Без `from module import *` в __init__.py
 ]
 ```
 
-`no-file-segments` — опция этого Python-пакета: в реестре правил FSD-плагина Steiger 0.7.0 она отсутствует. `no-cross-imports` здесь по умолчанию включено для совместимости, а в Steiger по умолчанию отключено. Это осознанные различия.
+`no-wildcard-exports` появилось в FSD-плагине Steiger 0.8.0 и по умолчанию отключено в обоих пакетах. Проверяются файлы `__init__.py` на всех указанных слоях, включая вложенные пакеты. Явные импорты модулей вроде `from . import model as model` допустимы в Python. Диагностика AST-проверок импортов теперь включает номер строки и позицию символа.
+
+`no-file-segments` — опция этого Python-пакета: в реестре правил FSD-плагина Steiger 0.8.0 она отсутствует. `no-cross-imports` здесь по умолчанию включено для совместимости, а в Steiger по умолчанию отключено. Это осознанные различия.
 
 Примеры и подробности находятся в [документации правил](src/pytest_fsd/rules/).
 

@@ -53,7 +53,8 @@ Slices on the same layer must not communicate directly (except within `shared`).
 A slice's internal folder structure is strictly private. Only the root `__init__.py` of the slice exposes the Public API.
 
 1. Add `from .ui.button import Button` to the slice's `__init__.py`.
-2. Update the consuming file to import via the Public API: `from src.features.auth import Button`.
+2. Include `Button` in the slice's explicit `__all__` list.
+3. Update the consuming file to import via the Public API: `from src.features.auth import Button`.
 
 ### 4. `Layer folder 'X' contains __init__.py` (AST)
 
@@ -61,6 +62,13 @@ A slice's internal folder structure is strictly private. Only the root `__init__
 **Resolution**:
 In FSD, layer folders (`features`, `entities`, etc.) act strictly as grouping namespaces. They do not have their own Public API. Delete the `__init__.py` file from the layer folder root.
 
-## Unimplemented Steiger Rules
+### 5. `Wildcard re-export` (AST, opt-in)
 
-Note that while this library is heavily inspired by `steiger`, it focuses on _hard dependency constraints_. Stylistic rules (like `inconsistent-naming`, `excessive-slicing`, or folder naming conventions) are left to established Python tools like standard `ruff` configurations.
+**Trigger**: A public API (`__init__.py`) uses `from .model import *` while `no-wildcard-exports` is enabled in `extra_rules`.
+**Resolution**: List the imported names explicitly, then expose them through `__all__`. Explicit imports of modules such as `from . import model as model` are allowed.
+
+## Additional and Unimplemented Rules
+
+The default checks include structure and naming constraints as well as import rules. `excessive-slicing`, `shared-lib-grouping`, `no-file-segments`, `no-reserved-folder-names`, and `no-wildcard-exports` are available through `extra_rules`.
+
+Applicable upstream changes are tracked through Steiger 0.7.0 / FSD plugin 0.8.0. `inconsistent-naming`, `import-locality`, and `insignificant-slice` remain unimplemented. Ruff naming and import rules may cover related Python concerns, but they are not equivalent Steiger checks.

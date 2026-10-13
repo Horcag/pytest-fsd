@@ -55,6 +55,8 @@ def test_no_public_api_sidestep_error(create_project):
     assert violations[0].rule == RULE_NAME
     assert "Importing internal module" in violations[0].message
     assert "auth.model" in violations[0].message
+    assert (violations[0].line_number, violations[0].column_number) == (1, 1)
+    assert (violations[0].end_line_number, violations[0].end_column_number) == (1, 44)
 
 
 def test_no_public_api_sidestep_missing_all(create_project):
@@ -109,3 +111,19 @@ def test_no_public_api_sidestep_not_in_all(create_project):
     assert len(violations) == 1
     assert violations[0].rule == RULE_NAME
     assert "is not explicitly exported" in violations[0].message
+
+
+def test_no_public_api_sidestep_multiline_location(create_project):
+    project_root = create_project(
+        "📂 features\n  📂 auth\n    📄 __init__.py\n    📄 model.py\n"
+        "  📂 profile\n    📄 __init__.py\n    📄 ui.py"
+    )
+    (project_root / "src/features/profile/ui.py").write_text(
+        "from src.features.auth.model import (\n    do_auth,\n)\n", encoding="utf-8"
+    )
+
+    violations = check(load_config(str(project_root)), str(project_root))
+
+    assert len(violations) == 1
+    assert (violations[0].line_number, violations[0].column_number) == (1, 1)
+    assert (violations[0].end_line_number, violations[0].end_column_number) == (3, 2)

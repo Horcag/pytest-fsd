@@ -5,6 +5,7 @@ import ast
 import os
 from typing import List
 
+from ..._lib.ast_utils import get_node_location, parse_python_file
 from ..._lib.fs_utils import get_layer_by_canonical_name
 from ..._lib.violations import Violation
 from ...config import FsdConfig
@@ -52,17 +53,10 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
             file_path = os.path.join(root, file)
 
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                # Blind Spot 7 Optimization: Skip AST parsing if no UI keywords are present
-                if not any(ui_lib in content for ui_lib in FORBIDDEN_UI_MODULES):
-                    continue
-
-                tree = ast.parse(content, filename=file_path)
-            except Exception:
+            parsed = parse_python_file(file_path)
+            if parsed is None:
                 continue
+            source, tree = parsed
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
@@ -73,7 +67,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                 Violation(
                                     rule=RULE_NAME,
                                     file_path=file_path,
-                                    line_number=node.lineno,
+                                    **get_node_location(node, source),
                                     message=f"Layer 'app' should not import UI framework "
                                     f"'{base_import}'. Extract UI to 'windows', 'pages' or 'widgets'.",
                                 )
@@ -86,7 +80,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                 Violation(
                                     rule=RULE_NAME,
                                     file_path=file_path,
-                                    line_number=node.lineno,
+                                    **get_node_location(node, source),
                                     message=f"Layer 'app' should not import UI framework "
                                     f"'{base_import}'. Extract UI to 'windows', 'pages' or 'widgets'.",
                                 )

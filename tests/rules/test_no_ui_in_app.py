@@ -43,6 +43,8 @@ def test_no_ui_in_app_tkinter_import(create_project):
     assert len(violations) == 1
     assert violations[0].rule == RULE_NAME
     assert "tkinter" in violations[0].message
+    assert (violations[0].line_number, violations[0].column_number) == (1, 1)
+    assert (violations[0].end_line_number, violations[0].end_column_number) == (1, 21)
 
 
 def test_no_ui_in_app_from_import(create_project):

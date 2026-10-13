@@ -13,10 +13,15 @@ class Violation:
     file_path: str
     message: str
     line_number: Optional[int] = None
+    column_number: Optional[int] = None
+    end_line_number: Optional[int] = None
+    end_column_number: Optional[int] = None
 
     def format(self) -> str:
         """Format the violation as a human-readable string."""
         location = self.file_path
         if self.line_number is not None:
             location += f":{self.line_number}"
+            if self.column_number is not None:
+                location += f":{self.column_number}"
         return f" - [{self.rule}] {location} -> {self.message}"
