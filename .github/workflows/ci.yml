@@ -28,9 +28,46 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --locked --python ${{ matrix.python-version }}
+
+      - name: Verify Python ${{ matrix.python-version }}
+        run: uv run --locked --python ${{ matrix.python-version }} python -c "import sys; print(sys.version); assert '.'.join(map(str, sys.version_info[:2])) == '${{ matrix.python-version }}'"
 
       - name: Run tests
-        run: uv run pytest tests/ -v --tb=short
+        run: uv run --locked --python ${{ matrix.python-version }} pytest tests/ -v --tb=short
         env:
           PYTHONPATH: src
+
+      - name: Build wheel and source distribution
+        run: uv build --python ${{ matrix.python-version }} --out-dir "$RUNNER_TEMP/dist"
+
+      - name: Validate installed wheel
+        run: |
+          wheels=("$RUNNER_TEMP"/dist/*.whl)
+          expected_version=$(uv run --locked --python ${{ matrix.python-version }} python -c 'from importlib.metadata import version; print(version("pytest-fsd"))')
+          PYTEST_FSD_EXPECTED_VERSION="$expected_version" uv run --isolated --no-project --python ${{ matrix.python-version }} --with "${wheels[0]}" python -I - <<'PY'
+          import os
+          import tempfile
+          from importlib.metadata import version
+          from pathlib import Path
+
+          from pytest_fsd import validate_fsd_architecture
+
+          assert version("pytest-fsd") == os.environ["PYTEST_FSD_EXPECTED_VERSION"]
+          with tempfile.TemporaryDirectory() as root:
+              project = Path(root)
+              api = project / "src" / "shared" / "lib" / "__init__.py"
+              api.parent.mkdir(parents=True)
+              api.write_text("from .unavailable_module import *\n", encoding="utf-8")
+              (project / "pyproject.toml").write_text(
+                  '[tool.pytest_fsd]\nextra_rules = ["no-wildcard-exports"]\n',
+                  encoding="utf-8",
+              )
+              try:
+                  validate_fsd_architecture(root)
+              except AssertionError as error:
+                  assert "[no-wildcard-exports]" in str(error)
+                  assert "__init__.py:1:1 ->" in str(error)
+              else:
+                  raise AssertionError("Installed wheel did not run no-wildcard-exports")
+          PY

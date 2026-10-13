@@ -28,6 +28,7 @@ from .rules import (
     excessive_slicing,
     no_file_segments,
     no_reserved_folder_names,
+    no_wildcard_exports,
     shared_lib_grouping,
 )
 
@@ -53,6 +54,7 @@ EXTRA_RULES = {
     "shared-lib-grouping": shared_lib_grouping,
     "no-file-segments": no_file_segments,
     "no-reserved-folder-names": no_reserved_folder_names,
+    "no-wildcard-exports": no_wildcard_exports,
 }
 
 

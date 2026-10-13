@@ -34,6 +34,7 @@ AVAILABLE_EXTRA_RULES = {
     "shared-lib-grouping",
     "no-file-segments",
     "no-reserved-folder-names",
+    "no-wildcard-exports",
 }
 
 
