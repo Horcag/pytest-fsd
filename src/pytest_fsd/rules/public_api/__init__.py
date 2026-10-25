@@ -33,7 +33,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 continue
 
             init_file = os.path.join(slice_path, "__init__.py")
-            if not os.path.exists(init_file):
+            if not os.path.isfile(init_file):
                 violations.append(
                     Violation(
                         rule=RULE_NAME,
@@ -60,7 +60,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                         child_path = os.path.join(segment_path, child)
                         if os.path.isdir(child_path) and not child.startswith("_"):
                             child_init = os.path.join(child_path, "__init__.py")
-                            if not os.path.exists(child_init):
+                            if not os.path.isfile(child_init):
                                 violations.append(
                                     Violation(
                                         rule=RULE_NAME,
@@ -71,7 +71,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                 )
                 else:
                     init_file = os.path.join(segment_path, "__init__.py")
-                    if not os.path.exists(init_file):
+                    if not os.path.isfile(init_file):
                         violations.append(
                             Violation(
                                 rule=RULE_NAME,

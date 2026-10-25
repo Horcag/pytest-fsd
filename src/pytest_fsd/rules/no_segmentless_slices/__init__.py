@@ -41,10 +41,15 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 continue
 
             for entry in entries:
-                if entry in STANDARD_SEGMENTS:
+                entry_path = os.path.join(slice_path, entry)
+                if entry in STANDARD_SEGMENTS and os.path.isdir(entry_path):
                     has_segments = True
                     break
-                if entry.endswith(".py") and entry[:-3] in STANDARD_SEGMENTS:
+                if (
+                    entry.endswith(".py")
+                    and entry[:-3] in STANDARD_SEGMENTS
+                    and os.path.isfile(entry_path)
+                ):
                     has_segments = True
                     break
 

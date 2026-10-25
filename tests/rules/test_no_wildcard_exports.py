@@ -146,7 +146,7 @@ def test_unreadable_public_api_is_reported(create_project, monkeypatch):
     def refuse_read(*args, **kwargs):
         raise PermissionError("read denied")
 
-    monkeypatch.setattr("builtins.open", refuse_read)
+    monkeypatch.setattr("tokenize.open", refuse_read)
     violations = check(FsdConfig(), str(project_root))
 
     assert len(violations) == 1

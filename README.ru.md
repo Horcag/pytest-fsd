@@ -44,6 +44,14 @@ def test_architecture():
 
 Запустите `pytest tests/test_architecture.py`. Нарушения выводятся как ошибки теста с именем правила и путём. Если исходный код лежит в другом каталоге, измените `base_path`. Валидатор читает `[tool.pytest_fsd]` из корня проекта; параметр `validate_fsd_architecture(project_root="...")` позволяет проверить другой проект.
 
+Самостоятельный запуск тоже вызывает `AssertionError` при нарушениях и завершается с ненулевым кодом:
+
+```bash
+python -c "from pytest_fsd import validate_fsd_architecture; validate_fsd_architecture()"
+```
+
+Неизвестные настройки и дополнительные правила вызывают `ValueError`. Отсутствующий каталог исходников, симлинки внутри настроенных слоёв и Python-файлы, которые невозможно разобрать, приводят к ошибке проверки. `ignore_paths` исключает посторонние каталоги из проверки имён слоёв, но не отключает проверку импортов настроенных слоёв.
+
 ## Правила
 
 По умолчанию проверяются направление импортов между слоями (`forbidden-imports`), независимость слайсов (`no-cross-imports`), публичные API (`public-api`, `no-public-api-sidestep`, `no-layer-public-api`), структура (`no-segmentless-slices`, `no-segments-on-sliced-layers`, `typo-in-layer-name`, `ambiguous-slice-names`), именование (`segments-by-purpose`, `repetitive-naming`) и `no-ui-in-app`.
@@ -75,7 +83,7 @@ extra_rules = [
 
 ## Ограничения
 
-- `forbidden-imports` и `no-cross-imports` используют [pytest-archon](https://pypi.org/project/pytest-archon/). Импорты под `if TYPE_CHECKING:` не видны этим проверкам во время выполнения.
+- Правила импортов статически разбирают Python, включая относительные импорты, `__init__.py`, импорты внутри функций и ветки `if TYPE_CHECKING:`. Код проекта не исполняется. Динамические импорты (`importlib`, `__import__`, `exec`) и нестандартные загрузчики не разрешаются.
 - `no-public-api-sidestep` анализирует синтаксис Python и явные списки `__all__`. Динамически собранные экспорты могут давать ложные срабатывания.
 - Прямых аналогов Steiger `inconsistent-naming` и `import-locality` здесь нет. Для именования Python и относительных импортов можно использовать правила Ruff `N` и `TID`; их поведение не совпадает полностью с правилами Steiger.
 - `insignificant-slice` требует анализа графа импортов и не реализовано. Устаревший слой `processes` пакет не создаёт — не указывайте его в `layers`.

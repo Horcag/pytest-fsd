@@ -44,6 +44,14 @@ def test_architecture():
 
 Run `pytest tests/test_architecture.py`. Violations appear as assertion failures with a rule name and path. If your source root is different, set `base_path` accordingly. The validator reads `[tool.pytest_fsd]` from the project root; `validate_fsd_architecture(project_root="...")` can target another project.
 
+Standalone checks also raise `AssertionError` on violations and return a nonzero exit status:
+
+```bash
+python -c "from pytest_fsd import validate_fsd_architecture; validate_fsd_architecture()"
+```
+
+Unknown configuration keys/rules and invalid settings raise `ValueError`. A missing source root, uninspectable Python file, or symlink inside configured layers fails validation. `ignore_paths` excludes non-FSD top-level directories from the layer-name check; it does not suppress imports in configured layers.
+
 ## Rules
 
 The default checks cover layer import direction (`forbidden-imports`), slice independence (`no-cross-imports`), public APIs (`public-api`, `no-public-api-sidestep`, `no-layer-public-api`), structure (`no-segmentless-slices`, `no-segments-on-sliced-layers`, `typo-in-layer-name`, `ambiguous-slice-names`), naming (`segments-by-purpose`, `repetitive-naming`), and `no-ui-in-app`.
@@ -75,8 +83,8 @@ See the [rule documentation](src/pytest_fsd/rules/) for examples and details.
 
 ## Scope and limitations
 
-- `forbidden-imports` and `no-cross-imports` use [pytest-archon](https://pypi.org/project/pytest-archon/). Imports guarded by `if TYPE_CHECKING:` are invisible to these runtime checks.
-- `no-public-api-sidestep` analyzes Python syntax and explicit `__all__` lists. Dynamically assembled exports may be reported incorrectly.
+- Import rules statically inspect Python syntax, including relative imports, package initializers, function-local imports and `if TYPE_CHECKING:` branches. They do not execute project code. Dynamically computed imports (`importlib`, `__import__`, `exec`) and custom import hooks are not resolved.
+- `no-public-api-sidestep` supports static `__all__` lists/tuples, concatenation, annotations, `+=`, `append` and `extend`. Unresolved dynamic exports are reported as unknown.
 - Steiger's `inconsistent-naming` and `import-locality` have no direct equivalent here. Consider Ruff's `N` and `TID` rules for Python naming and relative imports; their behavior is not identical to Steiger's rules.
 - Steiger's `insignificant-slice` needs an import graph and is not implemented. The deprecated `processes` layer is not created by this package; omit it from `layers`.
 - This package checks Python files and filesystem structure. It does not implement every Steiger rule or every JavaScript-specific convention.

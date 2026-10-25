@@ -40,3 +40,18 @@ def test_no_reserved_folder_names_violation(create_project):
     assert len(violations) == 1
     assert violations[0].rule == RULE_NAME
     assert "api" in violations[0].message
+
+
+def test_reserved_names_are_checked_inside_custom_segments(create_project):
+    project_root = create_project(
+        "📂 shared\n  📂 i18n\n    📂 translations\n      📂 model\n"
+        "📂 features\n  📂 auth\n    📂 routing\n      📂 api"
+    )
+
+    violations = check(load_config(str(project_root)), str(project_root))
+
+    assert {v.file_path for v in violations} == {
+        str(project_root / "src/shared/i18n/translations/model"),
+        str(project_root / "src/features/auth/routing/api"),
+    }
+    assert all(v.rule == RULE_NAME for v in violations)
