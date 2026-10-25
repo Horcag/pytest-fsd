@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Replace runtime import checks with static AST analysis. Forbidden layer and sibling-slice imports now fail both under pytest and in standalone Python, without importing project code or requiring pytest-archon.
+- Detect public-package, relative, aliased, source-root, nested-source-root, local-function, and `TYPE_CHECKING` imports; include package initializers. App and Shared segments remain free to import each other within their own layer.
+- Repair public API checking for plain module imports, parent-package imports, nested roots, relative imports, and static `__all__` declarations and updates.
+- Reject invalid configuration, unknown extra rules, missing source roots, and uninspectable Python files instead of silently passing. Respect Python encoding declarations and UTF-8 BOMs.
+- Fix structural checks for fake API files, invalid segment filesystem types, names colliding with Shared segments, and reserved names inside custom segments. Avoid false GUI-import violations for relative modules.
+- Add standalone/pytest regression controls and installed-wheel verification. Dynamic imports and dynamically computed exports remain outside static resolution.
+
 ## 0.4.0
 
 - Adapt the applicable changes from Steiger 0.7.0 / FSD plugin 0.8.0, published September 25, 2026.

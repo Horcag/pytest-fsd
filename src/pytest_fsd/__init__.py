@@ -9,6 +9,7 @@ that runs all FSD rules configured in pyproject.toml.
 from typing import List
 
 from ._lib.violations import Violation
+from ._lib.source_validation import check_sources
 from .config import load_config
 from .rules import (
     ambiguous_slice_names,
@@ -67,7 +68,7 @@ def validate_fsd_architecture(project_root: str = ".") -> None:
     Raises AssertionError if any violations are found.
     """
     config = load_config(project_root)
-    all_violations: List[Violation] = []
+    all_violations: List[Violation] = check_sources(config, project_root)
 
     # Запускаем базовые правила
     for rule_module in CORE_RULES:

@@ -176,25 +176,10 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-archon"
-version = "0.0.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
-    { name = "pytest", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/42/da/8132aa99cee223c7c5b330ffb4bd8094343239774f917e71a21f74d52009/pytest_archon-0.0.7.tar.gz", hash = "sha256:6a1e814c84adbea4afc188369733ec898f2525cc401f3ca965498f8b3ee454d5", size = 48359, upload-time = "2025-09-19T20:56:24.784Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/81/a46c239c77d4ec4e3450d463517ff63f10c22962c037ca2b4125394cf400/pytest_archon-0.0.7-py3-none-any.whl", hash = "sha256:5aaad17cff853d058ca686dd1da425ce884daf33ae9668011323173631dc4e94", size = 44868, upload-time = "2025-09-19T20:56:23.16Z" },
-]
-
-[[package]]
 name = "pytest-fsd"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
-    { name = "pytest-archon" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
 
@@ -206,10 +191,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "pytest-archon", specifier = ">=0.0.7" },
-    { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.1" },
-]
+requires-dist = [{ name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.1" }]
 
 [package.metadata.requires-dev]
 dev = [

@@ -1,16 +1,9 @@
-# src/pytest_fsd/rules/no_cross_imports/__init__.py
-"""
-[Rule: no-cross-imports]
-Slices within the same layer must not import from each other.
-Uses pytest-archon for dynamic runtime checking.
-"""
+"""Slices within a layer must be independent; App and Shared have no slices."""
 
-import os
 from typing import List
 
-from pytest_archon import archrule
-
-from ..._lib.fs_utils import get_slices, get_canonical_layer
+from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.imports import iter_imports
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -18,40 +11,15 @@ RULE_NAME = "no-cross-imports"
 
 
 def check(config: FsdConfig, project_root: str) -> List[Violation]:
-    """Verify that slices within the same layer do not import from each other."""
+    """Reject imports of sibling slices, including their public packages."""
     violations = []
-    base_path = config.base_path
-
-    for layer in config.layers:
-        # В shared слайсы могут зависеть друг от друга
-        if get_canonical_layer(layer) == "shared":
-            continue
-
-        slices = get_slices(layer, os.path.join(project_root, base_path))
-        if not slices:
-            continue
-
-        for slice_name in slices:
-            other_slices = [
-                f"{base_path}.{layer}.{s}.*" for s in slices if s != slice_name
-            ]
-            if other_slices:
-                try:
-                    (
-                        archrule(
-                            f"[{layer.upper()}] Slice '{slice_name}' is independent"
-                        )
-                        .match(f"{base_path}.{layer}.{slice_name}.*")
-                        .should_not_import(*other_slices)
-                        .check(base_path)
-                    )
-                except AssertionError as e:
-                    violations.append(
-                        Violation(
-                            rule=RULE_NAME,
-                            file_path=f"{layer}/{slice_name}",
-                            message=str(e).strip(),
-                        )
-                    )
-
+    sliced_layers = get_sliced_layers(config)
+    for path, source, target, location in iter_imports(config, project_root):
+        if (len(source) >= 3 and len(target) >= 2
+                and source[0] in sliced_layers and source[0] == target[0]
+                and source[1] != target[1]):
+            violations.append(Violation(
+                rule=RULE_NAME, file_path=path, **location,
+                message=f"Slice '{source[0]}/{source[1]}' must not import sibling slice '{target[0]}/{target[1]}'.",
+            ))
     return violations

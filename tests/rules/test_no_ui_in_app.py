@@ -78,3 +78,13 @@ def test_no_ui_in_app_rejects_ui_segment(create_project):
     assert len(violations) == 1
     assert violations[0].rule == RULE_NAME
     assert "app/ui" in violations[0].message
+
+
+def test_relative_module_named_like_gui_framework_is_allowed(create_project):
+    project_root = create_project("📂 app\n  📄 main.py")
+    (project_root / "src/app/main.py").write_text(
+        "from .tkinter import settings\nfrom ..PyQt6 import settings\n",
+        encoding="utf-8",
+    )
+
+    assert check(load_config(str(project_root)), str(project_root)) == []

@@ -2,8 +2,7 @@
 """
 Tests for the forbidden-imports rule.
 
-Правило использует pytest-archon, который вызывает pytest.fail() напрямую.
-Поэтому тестируем через subprocess, чтобы изолировать pytest-раннер.
+End-to-end pytest subprocess controls for the static import checks.
 """
 import os
 import subprocess

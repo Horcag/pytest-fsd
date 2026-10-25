@@ -2,16 +2,17 @@
 """Shared AST parsing utilities used by multiple rules."""
 
 import ast
+import tokenize
 from typing import Dict, List, Tuple, Optional
 
 
 def parse_python_file(filepath: str) -> Optional[Tuple[str, ast.Module]]:
     """Read and parse Python source without importing or executing it."""
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with tokenize.open(filepath) as f:
             source = f.read()
         return source, ast.parse(source, filename=filepath)
-    except (OSError, UnicodeError, SyntaxError, ValueError):
+    except (OSError, UnicodeError, SyntaxError, ValueError, LookupError):
         return None
 
 
@@ -63,21 +64,69 @@ def get_imports_from_file(
 
 
 def get_exported_names(filepath: str) -> Optional[List[str]]:
-    """Return the list of names exported in __all__ if defined, or None if not defined."""
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            tree = ast.parse(f.read(), filename=filepath)
-    except Exception:
+    """Return statically declared string exports, or None when unknown."""
+    parsed = parse_python_file(filepath)
+    if parsed is None:
+        return None
+    _, tree = parsed
+
+    def names(value: ast.AST) -> Optional[List[str]]:
+        if isinstance(value, (ast.List, ast.Tuple)):
+            result = []
+            for element in value.elts:
+                if not isinstance(element, ast.Constant) or not isinstance(element.value, str):
+                    return None
+                result.append(element.value)
+            return result
+        if isinstance(value, ast.BinOp) and isinstance(value.op, ast.Add):
+            left, right = names(value.left), names(value.right)
+            if left is not None and right is not None:
+                return left + right
         return None
 
+    exported = None
     for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        for descendant in ast.walk(node):
+            if isinstance(descendant, ast.Subscript) and isinstance(descendant.ctx, (ast.Store, ast.Del)):
+                if isinstance(descendant.value, ast.Name) and descendant.value.id == "__all__":
+                    exported = None
         if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "__all__":
-                    if isinstance(node.value, (ast.List, ast.Tuple)):
-                        return [
-                            elt.value
-                            for elt in node.value.elts
-                            if getattr(elt, "value", None) is not None
-                        ]
-    return None
+            if any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
+                exported = names(node.value)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "__all__" and node.value is not None:
+                exported = names(node.value)
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "__all__":
+                added = names(node.value)
+                if isinstance(node.op, ast.Add) and exported is not None and added is not None:
+                    exported += added
+                else:
+                    exported = None
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+            call = node.value
+            if isinstance(call.func, ast.Attribute) and isinstance(call.func.value, ast.Name) and call.func.value.id == "__all__":
+                if exported is not None and len(call.args) == 1 and not call.keywords:
+                    if call.func.attr == "append" and isinstance(call.args[0], ast.Constant) and isinstance(call.args[0].value, str):
+                        exported.append(call.args[0].value)
+                        continue
+                    if call.func.attr == "extend":
+                        added = names(call.args[0])
+                        if added is not None:
+                            exported += added
+                            continue
+                exported = None
+        else:
+            # Conditional declarations and mutations cannot define a known API.
+            for descendant in ast.walk(node):
+                if isinstance(descendant, ast.Name) and descendant.id == "__all__" and isinstance(descendant.ctx, (ast.Store, ast.Del)):
+                    exported = None
+                    break
+                if isinstance(descendant, ast.Call) and isinstance(descendant.func, ast.Attribute):
+                    receiver = descendant.func.value
+                    if isinstance(receiver, ast.Name) and receiver.id == "__all__":
+                        exported = None
+                        break
+    return exported

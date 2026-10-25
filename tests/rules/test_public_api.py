@@ -85,3 +85,20 @@ def test_public_api_shared_ui_lib_exceptions(create_project):
     # Expecting 1 violation: shared/ui/complex_widget is missing __init__.py
     assert len(violations) == 1
     assert "Subfolder 'complex_widget' in 'shared/ui' is missing __init__.py" in violations[0].message
+
+
+def test_public_api_requires_a_file_not_a_directory(create_project):
+    project_root = create_project(
+        "📂 features\n  📂 auth\n    📂 __init__.py\n"
+        "📂 shared\n  📂 api\n    📂 __init__.py\n"
+        "  📂 ui\n    📂 button\n      📂 __init__.py\n"
+        "  📂 lib\n    📂 dates\n      📂 __init__.py"
+    )
+
+    violations = check(load_config(str(project_root)), str(project_root))
+
+    assert {v.file_path for v in violations} == {
+        str(project_root / "src" / path)
+        for path in ["features/auth", "shared/api", "shared/ui/button", "shared/lib/dates"]
+    }
+    assert all(v.rule == RULE_NAME for v in violations)

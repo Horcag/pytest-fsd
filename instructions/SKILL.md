@@ -17,10 +17,7 @@ The `pytest-fsd` library enforces the Feature-Sliced Design (FSD) methodology. I
 
 ## Inner Workings
 
-The library acts as a facade, calling two distinct verification backends:
-
-1. **Dynamic Engine (`pytest-archon`)**: Tests layer hierarchy and cross-slice isolation at runtime by examining module dependencies.
-2. **Static Engine (AST Checker)**: Validates strict Public API compliance directly from text without executing code, which is safer and faster for syntax-level constraints.
+The library acts as a facade over static AST and filesystem checks. Import rules inspect absolute and relative imports, public packages, initializers, local-function imports and `TYPE_CHECKING` branches without executing project code. They raise `AssertionError` under pytest and standalone Python. Dynamic imports and unresolved dynamic exports are outside static resolution; invalid source/configuration fails explicitly.
 
 Configuration is centralized in `pyproject.toml` under the section `[tool.pytest_fsd]`.
 
@@ -28,7 +25,7 @@ Configuration is centralized in `pyproject.toml` under the section `[tool.pytest
 
 When you introduce code or refactor, `pytest-fsd` tests might fail. Here is how you should interpret and fix these errors:
 
-### 1. `must not import layers above it` (Archon)
+### 1. `must not import layers above it` (AST)
 
 **Trigger**: A lower layer (e.g., `entities`) is trying to import from a higher layer (e.g., `features`).
 **Resolution**:
@@ -37,11 +34,11 @@ FSD dictates downward dependencies only.
 - Relocate the shared code to a lower layer (e.g., `shared`).
 - Use Dependency Inversion (DI) via interfaces or protocols to abstract the dependency.
 
-### 2. `Slice 'X' is independent` (Archon)
+### 2. `must not import sibling slice` (AST)
 
 **Trigger**: A slice (e.g., `features/user_auth`) is importing from another slice on the same layer (e.g., `features/user_cart`).
 **Resolution**:
-Slices on the same layer must not communicate directly (except within `shared`). They must remain isolated.
+Slices on the same layer must not communicate directly (App and Shared contain segments rather than slices). They must remain isolated.
 
 - Extract the common functionality into a lower layer (`entities` or `shared`).
 - Compose the slices together inside a higher-level layer (like `widgets` or `pages`/`windows`).

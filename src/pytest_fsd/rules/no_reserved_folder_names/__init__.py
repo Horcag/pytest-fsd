@@ -52,21 +52,19 @@ def _check_segments_subfolders(
         if not os.path.isdir(segment_path) or segment_name.startswith("_"):
             continue
 
-        # Если имя папки является стандартным сегментом, проверяем все ее подпапки
-        if segment_name in STANDARD_SEGMENTS:
-            for root_dir, dirs, _ in os.walk(segment_path):
-                # Игнорируем скрытые папки
-                dirs[:] = [d for d in dirs if not d.startswith("_")]
+        for root_dir, dirs, _ in os.walk(segment_path):
+            # Игнорируем скрытые папки
+            dirs[:] = [d for d in dirs if not d.startswith("_")]
 
-                for subfolder in dirs:
-                    if subfolder in STANDARD_SEGMENTS:
-                        subfolder_path = os.path.join(root_dir, subfolder)
-                        violations.append(
-                            Violation(
-                                rule=RULE_NAME,
-                                file_path=subfolder_path,
-                                message=f"Subfolder '{subfolder}' inside segment "
-                                f"'{context}/{segment_name}' uses a reserved segment name. "
-                                f"This may cause confusion about the segment structure.",
-                            )
+            for subfolder in dirs:
+                if subfolder in STANDARD_SEGMENTS:
+                    subfolder_path = os.path.join(root_dir, subfolder)
+                    violations.append(
+                        Violation(
+                            rule=RULE_NAME,
+                            file_path=subfolder_path,
+                            message=f"Subfolder '{subfolder}' inside segment "
+                            f"'{context}/{segment_name}' uses a reserved segment name. "
+                            f"This may cause confusion about the segment structure.",
                         )
+                    )

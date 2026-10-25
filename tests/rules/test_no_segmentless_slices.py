@@ -41,3 +41,19 @@ def test_no_segmentless_slices_violation(create_project):
     assert len(violations) == 1
     assert violations[0].rule == RULE_NAME
     assert "auth" in violations[0].message
+
+
+def test_no_segmentless_slices_checks_entry_types(create_project):
+    project_root = create_project(
+        "📂 features\n  📂 bare_file\n    📄 model\n"
+        "  📂 suffixed_directory\n    📂 model.py\n"
+        "  📂 file_segment\n    📄 model.py\n"
+        "  📂 directory_segment\n    📂 model"
+    )
+
+    violations = check(load_config(str(project_root)), str(project_root))
+
+    assert {v.file_path for v in violations} == {
+        str(project_root / "src/features/bare_file"),
+        str(project_root / "src/features/suffixed_directory"),
+    }

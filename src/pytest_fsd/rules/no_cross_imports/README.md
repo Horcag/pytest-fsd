@@ -4,9 +4,9 @@ Forbid imports between slices on the same layer. Slices within the same layer mu
 
 ## How it works
 
-Uses `pytest-archon` to dynamically verify that each slice in a layer does not import from any other slice in the same layer.
+Statically analyzes Python imports without executing project modules. Includes public packages, relative imports, package initializers and `TYPE_CHECKING` branches; works under pytest and standalone Python.
 
-The `shared` layer is excluded from this check, as segments in `shared` may depend on each other.
+The `app` and `shared` layers are excluded: they contain segments, which may depend on each other within the same layer.
 
 ## Examples
 

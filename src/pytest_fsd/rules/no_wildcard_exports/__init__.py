@@ -2,6 +2,7 @@
 
 import ast
 import os
+import tokenize
 from typing import List
 
 from ..._lib.ast_utils import get_node_location
@@ -22,10 +23,10 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 continue
             file_path = os.path.join(root, "__init__.py")
             try:
-                with open(file_path, "r", encoding="utf-8") as api:
+                with tokenize.open(file_path) as api:
                     source = api.read()
                 tree = ast.parse(source, filename=file_path)
-            except (OSError, UnicodeError, SyntaxError, ValueError) as error:
+            except (OSError, UnicodeError, SyntaxError, ValueError, LookupError) as error:
                 violations.append(
                     Violation(
                         rule=RULE_NAME,

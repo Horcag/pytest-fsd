@@ -73,7 +73,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                                 )
                             )
                 elif isinstance(node, ast.ImportFrom):
-                    if node.module:
+                    if node.module and node.level == 0:
                         base_import = node.module.split(".")[0]
                         if base_import in FORBIDDEN_UI_MODULES:
                             violations.append(

@@ -8,7 +8,7 @@ This rule maps to Steiger's `no-higher-level-imports`.
 
 ## How it works
 
-Uses `pytest-archon` to dynamically verify that modules in each layer do not import from any layer above them in the configured hierarchy.
+Statically analyzes Python imports without executing project modules. Includes public packages, relative imports, package initializers and `TYPE_CHECKING` branches; works under pytest and standalone Python.
 
 For example, with default layers `["app", "windows", "widgets", "features", "entities", "shared"]`:
 
