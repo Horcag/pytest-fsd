@@ -340,3 +340,28 @@ def test_dynamic_wildcard_exports_follow_optional_rule(tmp_path, source):
     from pytest_fsd.rules import no_wildcard_exports
     config = write_project(tmp_path, source, 'features/auth/__init__.py')
     assert no_wildcard_exports.check(config, str(tmp_path))
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason='match requires Python 3.10')
+def test_match_branches_do_not_hide_dynamic_imports(tmp_path):
+    write_project(tmp_path,
+        "target = 'src.features.tables'\nmatch flag:\n    case True:\n        target = 'json'\n__import__(target)\n")
+    with pytest.raises(AssertionError, match='no-cross-imports|dynamic-imports'):
+        validate_fsd_architecture(str(tmp_path))
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason='match requires Python 3.10')
+def test_match_pattern_binding_shadows_loader(tmp_path):
+    write_project(tmp_path,
+        "from importlib import import_module as load\ndef f(flag):\n"
+        "    match flag:\n        case {'load': load}:\n            load(target)\n")
+    validate_fsd_architecture(str(tmp_path))
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason='except* requires Python 3.11')
+def test_exception_group_branches_do_not_hide_dynamic_imports(tmp_path):
+    write_project(tmp_path,
+        "target = 'src.features.tables'\ntry:\n    operation()\nexcept* Exception:\n"
+        "    target = 'json'\n__import__(target)\n")
+    with pytest.raises(AssertionError, match='no-cross-imports|dynamic-imports'):
+        validate_fsd_architecture(str(tmp_path))

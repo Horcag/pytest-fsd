@@ -211,6 +211,23 @@ class _Analyzer(ast.NodeVisitor):
         for statement in node.finalbody:
             self.visit(statement)
 
+    visit_TryStar = visit_Try
+
+    def visit_Match(self, node):
+        self.expr(node.subject)
+        before = dict(self.env)
+        outcomes = [before]
+        for case in node.cases:
+            self.env = dict(before)
+            for pattern in ast.walk(case.pattern):
+                for name in _pattern_names(pattern):
+                    self.env[name] = UNKNOWN
+            self.expr(case.guard)
+            for statement in case.body:
+                self.visit(statement)
+            outcomes.append(self.env)
+        self.env = self.merge(outcomes)
+
     def visit_With(self, node):
         for item in node.items:
             self.expr(item.context_expr)
@@ -499,6 +516,9 @@ def _local_names(node):
                 names.add(child.name)
             elif isinstance(child, (ast.Global, ast.Nonlocal)):
                 declarations.update(child.names)
+            elif _pattern_names(child):
+                names.update(_pattern_names(child))
+                collect(child)
             elif isinstance(child, ast.Lambda):
                 continue
             elif isinstance(child, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
@@ -521,3 +541,12 @@ def _may_load(value):
     if isinstance(value, dict):
         return any(_may_load(item) for item in value.values())
     return isinstance(value, Symbol) and (value.name in LOADERS or value.name in ('importlib', 'builtins') or value.name.startswith('?dynamic'))
+
+
+def _pattern_names(node):
+    # Match nodes do not exist on Python 3.8/3.9.
+    if type(node).__name__ in ('MatchAs', 'MatchStar'):
+        return [node.name] if node.name else []
+    if type(node).__name__ == 'MatchMapping':
+        return [node.rest] if node.rest else []
+    return []
