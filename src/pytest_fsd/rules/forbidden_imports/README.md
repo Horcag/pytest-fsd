@@ -10,10 +10,10 @@ This rule maps to Steiger's `no-higher-level-imports`.
 
 Statically analyzes Python imports without executing project modules. Includes public packages, relative imports, package initializers and `TYPE_CHECKING` branches; works under pytest and standalone Python.
 
-For example, with default layers `["app", "windows", "widgets", "features", "entities", "shared"]`:
+For example, with default layers `["app", "pages", "widgets", "features", "entities", "shared"]`:
 
 - `features` can import from `entities` and `shared`
-- `features` **cannot** import from `widgets`, `windows`, or `app`
+- `features` **cannot** import from `widgets`, `pages`, or `app`
 
 ## Examples
 
@@ -35,3 +35,5 @@ from src.pages.home import HomePage       # VIOLATION: pages is above features
 ## Rationale
 
 This is one of the main rules of Feature-Sliced Design. It ensures low coupling and predictability during refactoring.
+
+Layer order follows the configured list, including custom or numerically prefixed names. Resolvable programmatic imports and literal executed code use the same check. External packages and imports in unconfigured layers are outside this rule.

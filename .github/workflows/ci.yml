@@ -46,6 +46,7 @@ jobs:
           wheels=("$RUNNER_TEMP"/dist/*.whl)
           expected_version=$(uv run --locked --python ${{ matrix.python-version }} python -c 'from importlib.metadata import version; print(version("pytest-fsd"))')
           uv run --isolated --no-project --python ${{ matrix.python-version }} --with "${wheels[0]}" python -I tests/installed_smoke.py "$expected_version"
+          uv run --isolated --no-project --python ${{ matrix.python-version }} --with "${wheels[0]}" python -I tests/rule_contracts.py "$expected_version"
           PYTEST_FSD_EXPECTED_VERSION="$expected_version" uv run --isolated --no-project --python ${{ matrix.python-version }} --with "${wheels[0]}" python -I - <<'PY'
           import os
           import tempfile

@@ -8,7 +8,11 @@ For example, if shared/i18n exists, having features/i18n is confusing.
 import os
 from typing import Dict, List
 
-from ..._lib.fs_utils import get_layer_by_canonical_name, get_sliced_layers
+from ..._lib.fs_utils import (
+    get_layer_by_canonical_name,
+    get_sliced_layers,
+    is_ignored_directory,
+)
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -32,7 +36,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     shared_slices: Dict[str, str] = {}
     for segment in os.listdir(shared_path):
         segment_path = os.path.join(shared_path, segment)
-        if not os.path.isdir(segment_path) or segment.startswith("_"):
+        if not os.path.isdir(segment_path) or is_ignored_directory(segment):
             continue
 
         shared_slices[segment] = f"{shared_layer}/{segment}"
@@ -40,7 +44,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
         for shared_slice in os.listdir(segment_path):
             if os.path.isdir(
                 os.path.join(segment_path, shared_slice)
-            ) and not shared_slice.startswith("_"):
+            ) and not is_ignored_directory(shared_slice):
                 shared_slices.setdefault(
                     shared_slice, f"{shared_layer}/{segment}/{shared_slice}"
                 )
@@ -58,7 +62,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for slice_name in os.listdir(layer_path):
             slice_path = os.path.join(layer_path, slice_name)
-            if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+            if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                 continue
 
             if slice_name in shared_slices:

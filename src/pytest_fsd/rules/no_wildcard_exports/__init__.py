@@ -7,6 +7,7 @@ from typing import List
 
 from ..._lib.ast_utils import get_node_location
 from ..._lib.dynamic_imports import analyze_imports
+from ..._lib.fs_utils import is_ignored_directory
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -19,7 +20,8 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
     base_dir = os.path.join(project_root, config.base_path)
 
     for layer in config.layers:
-        for root, _, files in os.walk(os.path.join(base_dir, layer)):
+        for root, dirs, files in os.walk(os.path.join(base_dir, layer)):
+            dirs[:] = sorted(name for name in dirs if not is_ignored_directory(name))
             if "__init__.py" not in files:
                 continue
             file_path = os.path.join(root, "__init__.py")

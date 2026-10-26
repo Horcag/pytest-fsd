@@ -1,6 +1,6 @@
 # `ambiguous-slice-names`
 
-Forbid slice names that match segment names in the `shared` layer. For example, if `shared/i18n` exists, having `features/i18n` is confusing.
+Forbid slice names that match segment names or their immediate child directories in the `shared` layer. For example, if `shared/i18n` exists, having `features/i18n` is confusing.
 
 ## Examples
 

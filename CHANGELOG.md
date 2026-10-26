@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+- Audit every implemented rule: 12 core rules, five opt-in rules, and both source/dynamic-import guards. Add portable positive/negative witnesses, opt-in controls and 36 no-op/dispatch/guard mutation controls; run all 19 installed-package contracts in every Python CI job.
+- Check legitimate underscore-prefixed packages consistently; exclude dot-hidden metadata directories and `__pycache__` from structural, import and naming scans. Fix slice-count, collision and recursive naming errors caused by inconsistent directory filtering.
+- Fix file/directory confusion in `no-file-segments` and `no-layer-public-api`.
+- Enforce Shared public APIs in `no-public-api-sidestep`: segment APIs and individual shared/ui and shared/lib package APIs. Preserve own-boundary imports and standalone UI/library module entrypoints.
+- Treat escaped/mutated `__all__` values as unknown instead of trusting stale exports. Deduplicate identical sibling-slice diagnostics and correct source-root import recommendations.
+- Report unreadable source-root scans and parser recursion errors explicitly; stop structural validation on an uninspectable tree. Validate a malformed top-level TOML tool value.
+- Document every audited rule and its witnesses in `docs/RULE-AUDIT.md`. Correct reference-only rule pages so they do not imply that missing checks or Ruff alternatives are active FSD rules.
+
 ## 0.6.0
 
 - Analyze `importlib.import_module`, `importlib.__import__`, and built-in `__import__` using the same layer, slice, public API, and app/UI rules as ordinary imports.

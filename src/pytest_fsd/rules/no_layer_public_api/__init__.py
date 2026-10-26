@@ -27,7 +27,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             continue
 
         init_file = os.path.join(layer_path, "__init__.py")
-        if os.path.exists(init_file):
+        if os.path.isfile(init_file):
             violations.append(
                 Violation(
                     rule=RULE_NAME,

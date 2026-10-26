@@ -89,7 +89,7 @@ def test_no_cross_imports_errors(create_project):
 
 
 def test_no_cross_imports_shared_allowed(create_project):
-    """Shared layer slices can depend on each other."""
+    """Shared segments can depend on each other through public APIs."""
     project_root = create_project(
         """
         📂 shared
@@ -102,6 +102,9 @@ def test_no_cross_imports_shared_allowed(create_project):
         """
     )
 
+    (project_root / "src" / "shared" / "config" / "__init__.py").write_text(
+        "env = {}\n__all__ = ['env']\n", encoding="utf-8"
+    )
     (project_root / "src" / "shared" / "ui" / "component.py").write_text(
         "from src.shared.config import env\n", encoding="utf-8"
     )

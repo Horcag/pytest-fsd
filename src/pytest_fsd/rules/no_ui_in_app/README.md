@@ -14,4 +14,4 @@ src/pages/home/ui/       # allowed
 import tkinter            # violation in pytest-fsd
 ```
 
-The import check looks at static `import` and `from ... import ...` syntax. It does not detect dynamic imports or every possible GUI framework.
+The import check covers static imports, resolvable programmatic imports and literal executed code without executing project modules. It applies to the configured App layer, including ordering prefixes. Relative local imports such as `from .tkinter import settings` are allowed. Hidden directories and `__pycache__` are excluded; underscore-prefixed Python packages remain in scope. The framework list is explicit and does not cover every GUI toolkit.

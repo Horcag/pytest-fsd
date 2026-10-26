@@ -30,3 +30,7 @@ A segment can be either a **folder** (e.g., `features/auth/model/`) or a **file*
 ## Rationale
 
 A slice without standard segments is usually an architectural smell — it suggests that the code is not properly decomposed into purpose-driven groups.
+
+## Scope
+
+Configured layer names and source roots are supported, including numeric ordering prefixes. Ordinary underscore-prefixed package directories are checked. Dot-hidden directories and `__pycache__` are metadata and are skipped. Checks apply at the documented slice or segment boundary, not recursively to implementation packages.

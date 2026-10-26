@@ -1,6 +1,6 @@
 # `inconsistent-naming`
 
-> 🔶 **Covered by Ruff.** This rule is NOT part of `pytest-fsd` core checks, but is fully enforceable via Ruff's `N` (pep8-naming) plugin.
+> 🔶 **Not implemented in pytest-fsd.** Ruff's `N` rules check related Python naming conventions; they do not implement Steiger's pluralization rule.
 
 Ensure that all modules and directories follow consistent naming conventions (`snake_case` for Python).
 

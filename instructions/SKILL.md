@@ -69,3 +69,7 @@ In FSD, layer folders (`features`, `entities`, etc.) act strictly as grouping na
 The default checks include structure and naming constraints as well as import rules. `excessive-slicing`, `shared-lib-grouping`, `no-file-segments`, `no-reserved-folder-names`, and `no-wildcard-exports` are available through `extra_rules`.
 
 Applicable upstream changes are tracked through Steiger 0.7.0 / FSD plugin 0.8.0. `inconsistent-naming`, `import-locality`, and `insignificant-slice` remain unimplemented. Ruff naming and import rules may cover related Python concerns, but they are not equivalent Steiger checks.
+
+## Complete rule verification
+
+See `docs/RULE-AUDIT.md` for all 17 executable rules and the two input guards. Tests must check both accepted and rejected projects and confirm the named facade diagnostic. `tests/rule_contracts.py` runs the same 19 contracts against an installed package; CI also detects 36 no-op or dispatch mutations. Dot-hidden directories and `__pycache__` are metadata; underscore-prefixed packages remain checked. Shared imports must use segment APIs or individual shared/ui and shared/lib package APIs; imports inside the same boundary and standalone library/UI modules remain valid.

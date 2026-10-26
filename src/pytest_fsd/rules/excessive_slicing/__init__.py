@@ -8,7 +8,7 @@ Default threshold: 20 slices per layer.
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.fs_utils import is_ignored_directory, get_sliced_layers
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -30,7 +30,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
         slices = [
             d
             for d in os.listdir(layer_path)
-            if os.path.isdir(os.path.join(layer_path, d)) and not d.startswith("_")
+            if os.path.isdir(os.path.join(layer_path, d)) and not is_ignored_directory(d)
         ]
 
         if len(slices) > DEFAULT_THRESHOLD:

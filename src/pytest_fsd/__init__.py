@@ -69,6 +69,11 @@ def validate_fsd_architecture(project_root: str = ".") -> None:
     """
     config = load_config(project_root)
     all_violations: List[Violation] = check_sources(config, project_root)
+    if any(violation.rule == "python-source" for violation in all_violations):
+        # Structural rules cannot inspect an unreadable or invalid tree reliably.
+        raise AssertionError("FSD Architecture Validation failed:\n" + "\n".join(
+            violation.format() for violation in all_violations
+        ))
 
     # Запускаем базовые правила
     for rule_module in CORE_RULES:

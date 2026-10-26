@@ -8,6 +8,7 @@ and not in ignore_paths. Catches typos like 'fietures' instead of 'features'.
 import os
 from typing import List
 
+from ..._lib.fs_utils import is_ignored_directory
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -32,7 +33,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
         entry_path = os.path.join(base_dir, entry)
         if not os.path.isdir(entry_path):
             continue
-        if entry.startswith("_") or entry.startswith("."):
+        if is_ignored_directory(entry):
             continue
         if entry in known_layers or entry in ignored:
             continue

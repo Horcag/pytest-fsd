@@ -12,7 +12,7 @@ def parse_python_file(filepath: str) -> Optional[Tuple[str, ast.Module]]:
         with tokenize.open(filepath) as f:
             source = f.read()
         return source, ast.parse(source, filename=filepath)
-    except (OSError, UnicodeError, SyntaxError, ValueError, LookupError):
+    except (OSError, UnicodeError, SyntaxError, ValueError, LookupError, RecursionError):
         return None
 
 
@@ -85,16 +85,37 @@ def get_exported_names(filepath: str) -> Optional[List[str]]:
         return None
 
     exported = None
+    # A called local function can expose or change the export list indirectly.
+    mutators = {
+        definition.name for definition in tree.body
+        if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and any(isinstance(child, ast.Name) and child.id == "__all__"
+                for child in ast.walk(definition))
+    }
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             continue
         for descendant in ast.walk(node):
+            if isinstance(descendant, (ast.Assign, ast.AnnAssign, ast.NamedExpr)):
+                value = descendant.value
+                if value is not None and any(isinstance(n, ast.Name) and n.id == "__all__" for n in ast.walk(value)):
+                    exported = None  # A mutable export list escaped through an alias.
+            if isinstance(descendant, ast.Call):
+                if isinstance(descendant.func, ast.Name) and descendant.func.id in mutators | {"exec", "eval"}:
+                    exported = None
+                if any(isinstance(n, ast.Name) and n.id == "__all__"
+                       for argument in list(descendant.args) + [kw.value for kw in descendant.keywords]
+                       for n in ast.walk(argument)):
+                    exported = None  # An opaque call can change the list in place.
             if isinstance(descendant, ast.Subscript) and isinstance(descendant.ctx, (ast.Store, ast.Del)):
                 if isinstance(descendant.value, ast.Name) and descendant.value.id == "__all__":
                     exported = None
         if isinstance(node, ast.Assign):
             if any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-                exported = names(node.value)
+                exported = names(node.value) if len(node.targets) == 1 else None
+            elif any(isinstance(child, ast.Name) and child.id == "__all__"
+                     for target in node.targets for child in ast.walk(target)):
+                exported = None
         elif isinstance(node, ast.AnnAssign):
             if isinstance(node.target, ast.Name) and node.target.id == "__all__" and node.value is not None:
                 exported = names(node.value)
