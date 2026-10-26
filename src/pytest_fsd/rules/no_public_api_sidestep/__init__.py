@@ -6,6 +6,7 @@ from typing import List
 
 from ..._lib.ast_utils import get_exported_names, get_node_location, parse_python_file
 from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.dynamic_imports import analyze_imports
 from ..._lib.imports import imported_modules, resolve_module
 from ..._lib.violations import Violation
 from ...config import FsdConfig
@@ -34,7 +35,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             if parsed is None:
                 continue
             source, tree = parsed
-            for node in ast.walk(tree):
+            for node in analyze_imports(source, tree, file_path, base_dir).imports:
                 targets = []
                 if isinstance(node, ast.Import):
                     for alias in node.names:

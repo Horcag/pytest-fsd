@@ -6,6 +6,7 @@ import tokenize
 from typing import List
 
 from .violations import Violation
+from .dynamic_imports import analyze_imports
 from ..config import FsdConfig
 
 
@@ -41,7 +42,9 @@ def check_sources(config: FsdConfig, project_root: str) -> List[Violation]:
                 file_path = os.path.join(root, filename)
                 try:
                     with tokenize.open(file_path) as handle:
-                        ast.parse(handle.read(), filename=file_path)
+                        source = handle.read()
+                    tree = ast.parse(source, filename=file_path)
+                    violations.extend(analyze_imports(source, tree, file_path, base_dir).violations)
                 except (OSError, UnicodeError, SyntaxError, ValueError, LookupError) as error:
                     violations.append(Violation(
                         rule="python-source", file_path=file_path,

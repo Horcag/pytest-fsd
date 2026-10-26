@@ -83,11 +83,22 @@ See the [rule documentation](src/pytest_fsd/rules/) for examples and details.
 
 ## Scope and limitations
 
-- Import rules statically inspect Python syntax, including relative imports, package initializers, function-local imports and `if TYPE_CHECKING:` branches. They do not execute project code. Dynamically computed imports (`importlib`, `__import__`, `exec`) and custom import hooks are not resolved.
+- Import rules statically inspect Python syntax, including relative imports, package initializers, function-local imports and `if TYPE_CHECKING:` branches. They do not execute project code. Programmatic imports through `importlib.import_module`, `importlib.__import__`, and built-in `__import__` are analyzed too. Loader aliases, literal names, constant bindings, concatenation, f-strings, joins, relative packages and fromlists are supported. Literal `exec`/`eval` strings and literal `compile` inputs are inspected recursively, with bounded expansion. Unresolved recognized loader calls or executed code fail with `[dynamic-imports]`; they do not silently pass. Arbitrary user-defined import hooks and runtime code are not executed.
 - `no-public-api-sidestep` supports static `__all__` lists/tuples, concatenation, annotations, `+=`, `append` and `extend`. Unresolved dynamic exports are reported as unknown.
 - Steiger's `inconsistent-naming` and `import-locality` have no direct equivalent here. Consider Ruff's `N` and `TID` rules for Python naming and relative imports; their behavior is not identical to Steiger's rules.
 - Steiger's `insignificant-slice` needs an import graph and is not implemented. The deprecated `processes` layer is not created by this package; omit it from `layers`.
 - This package checks Python files and filesystem structure. It does not implement every Steiger rule or every JavaScript-specific convention.
+
+For example, this computed sibling import is rejected:
+
+```python
+import importlib
+
+layer = "features"
+importlib.import_module(f"src.{layer}.other_slice")
+```
+
+If the target comes from runtime input (`importlib.import_module(requested_module)`), validation fails with `[dynamic-imports]` because the target cannot be proven valid. Replace it with an explicit dispatch between statically known imports. The checker is an architecture linter; it does not emulate arbitrary Python execution or serve as an execution sandbox.
 
 See the [upstream FSD plugin changelog](https://github.com/feature-sliced/steiger/blob/master/packages/steiger-plugin-fsd/CHANGELOG.md) for Steiger's release history.
 

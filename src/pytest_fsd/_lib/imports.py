@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterator, List, Optional, Tuple
 
 from .ast_utils import get_node_location, parse_python_file
+from .dynamic_imports import analyze_imports
 from ..config import FsdConfig
 
 
@@ -52,9 +53,10 @@ def imported_modules(
         if parts is not None:
             result.append(parts)
             for alias in node.names:
-                child = Path(base_dir).joinpath(*parts, alias.name)
+                child_parts = tuple(alias.name.split('.'))
+                child = Path(base_dir).joinpath(*parts, *child_parts)
                 if alias.name != "*" and (child.is_dir() or child.with_suffix(".py").is_file()):
-                    result.append(parts + (alias.name,))
+                    result.append(parts + child_parts)
         elif node.module and not node.level:
             # `from src import features` (or a nested source root).
             base = Path(base_dir).resolve()
@@ -84,7 +86,6 @@ def iter_imports(
             if parsed is None:
                 continue  # The facade reports unreadable/invalid Python sources.
             source, tree = parsed
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.Import, ast.ImportFrom)):
-                    for target in imported_modules(node, file_path, base_dir, config.layers):
-                        yield file_path, source_parts, target, get_node_location(node, source)
+            for node in analyze_imports(source, tree, file_path, base_dir).imports:
+                for target in imported_modules(node, file_path, base_dir, config.layers):
+                    yield file_path, source_parts, target, get_node_location(node, source)
