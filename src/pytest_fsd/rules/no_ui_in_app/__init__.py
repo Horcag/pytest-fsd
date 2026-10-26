@@ -7,6 +7,7 @@ from typing import List
 
 from ..._lib.ast_utils import get_node_location, parse_python_file
 from ..._lib.fs_utils import get_layer_by_canonical_name
+from ..._lib.dynamic_imports import analyze_imports
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -58,7 +59,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                 continue
             source, tree = parsed
 
-            for node in ast.walk(tree):
+            for node in analyze_imports(source, tree, file_path, base_dir).imports:
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         base_import = alias.name.split(".")[0]

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+- Analyze `importlib.import_module`, `importlib.__import__`, and built-in `__import__` using the same layer, slice, public API, and app/UI rules as ordinary imports.
+- Resolve imported/assigned loader aliases, literal names, constant bindings, concatenation, f-strings, joins, relative packages, and `__import__` fromlists without executing project code.
+- Inspect literal `exec`/`eval` code and literal `compile` inputs, including nested dynamic imports. Report violations at the original call site.
+- Fail with `dynamic-imports` when a recognized loader target, package, fromlist, executed code, or escaped loader cannot be inspected. Unknown values never count as proof that a recognized dynamic import is valid.
+- Respect function/lambda parameter shadowing, class/method lookup, comprehensions and conditional bindings; preserve possible loader provenance across branches.
+- Bound recursive code expansion and diagnostics to prevent generated code from making inspection unbounded.
+- Add dynamic import, namespace, scope, no-execution, subprocess and installed-wheel regression controls. Custom import hooks and arbitrary runtime behavior are not executed by the checker.
+
 ## 0.5.0
 
 - Replace runtime import checks with static AST analysis. Forbidden layer and sibling-slice imports now fail both under pytest and in standalone Python, without importing project code or requiring pytest-archon.

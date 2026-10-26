@@ -14,6 +14,11 @@ def main():
         ("features/auth/api/router.py", "from src.features.tables import value\n", "no-cross-imports"),
         ("shared/lib/source.py", "from src.features.tables import value\n", "forbidden-imports"),
         ("features/auth/api/router.py", "from src.shared.lib import value\n", None),
+        ("features/auth/api/router.py", "import importlib\nlayer = 'features'\nimportlib.import_module(f'src.{layer}.tables')\n", "no-cross-imports"),
+        ("shared/lib/source.py", "__import__('src.features.tables')\n", "forbidden-imports"),
+        ("features/auth/api/router.py", "__import__(unknown_target)\n", "dynamic-imports"),
+        ("features/auth/api/router.py", "exec(\"import src.features.tables\")\n", "no-cross-imports"),
+        ("features/auth/api/router.py", "import importlib\nimportlib.import_module('src.shared.lib')\n", None),
     ]
     for source_path, source, expected_rule in cases:
         with tempfile.TemporaryDirectory(prefix="pytest-fsd-wheel-") as directory:

@@ -17,7 +17,7 @@ The `pytest-fsd` library enforces the Feature-Sliced Design (FSD) methodology. I
 
 ## Inner Workings
 
-The library acts as a facade over static AST and filesystem checks. Import rules inspect absolute and relative imports, public packages, initializers, local-function imports and `TYPE_CHECKING` branches without executing project code. They raise `AssertionError` under pytest and standalone Python. Dynamic imports and unresolved dynamic exports are outside static resolution; invalid source/configuration fails explicitly.
+The library acts as a facade over static AST and filesystem checks. Import rules inspect absolute and relative imports, public packages, initializers, local-function imports and `TYPE_CHECKING` branches without executing project code. They raise `AssertionError` under pytest and standalone Python. Programmatic imports through importlib and __import__, loader aliases, constant expressions, and literal exec/eval/compile code feed the same rules. Unresolved recognized loader calls, executed code, or escaped loaders fail with dynamic-imports. Recursive expansion is bounded. Unresolved dynamic exports, invalid source and invalid configuration fail explicitly. The checker never executes project code or custom import hooks.
 
 Configuration is centralized in `pyproject.toml` under the section `[tool.pytest_fsd]`.
 
