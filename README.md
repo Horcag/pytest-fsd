@@ -79,11 +79,13 @@ extra_rules = [
 
 `no-file-segments` is a Python package option; it is not registered as a rule in Steiger FSD plugin 0.8.0. `no-cross-imports` is enabled here for compatibility, whereas the upstream plugin does not enable it by default. These choices are intentionally different from Steiger.
 
-See the [rule documentation](src/pytest_fsd/rules/) for examples and details.
+See the [rule documentation](src/pytest_fsd/rules/) for examples and details. The [complete rule audit](docs/RULE-AUDIT.md) maps all 17 implemented rules and both input guards to positive/negative, activation, threshold and installed-package checks.
 
 ## Scope and limitations
 
 - Import rules statically inspect Python syntax, including relative imports, package initializers, function-local imports and `if TYPE_CHECKING:` branches. They do not execute project code. Programmatic imports through `importlib.import_module`, `importlib.__import__`, and built-in `__import__` are analyzed too. Loader aliases, literal names, constant bindings, concatenation, f-strings, joins, relative packages and fromlists are supported. Literal `exec`/`eval` strings and literal `compile` inputs are inspected recursively, with bounded expansion. Unresolved recognized loader calls or executed code fail with `[dynamic-imports]`; they do not silently pass. Arbitrary user-defined import hooks and runtime code are not executed.
+- Shared APIs are enforced too: other segments use their root `__init__.py`; `shared/ui` and `shared/lib` expose individual component/library package APIs or standalone Python modules. Imports within the same boundary remain valid.
+- Dot-hidden metadata directories and `__pycache__` are excluded from scans. Underscore-prefixed packages such as `_private` are ordinary code and are checked.
 - `no-public-api-sidestep` supports static `__all__` lists/tuples, concatenation, annotations, `+=`, `append` and `extend`. Unresolved dynamic exports are reported as unknown.
 - Steiger's `inconsistent-naming` and `import-locality` have no direct equivalent here. Consider Ruff's `N` and `TID` rules for Python naming and relative imports; their behavior is not identical to Steiger's rules.
 - Steiger's `insignificant-slice` needs an import graph and is not implemented. The deprecated `processes` layer is not created by this package; omit it from `layers`.

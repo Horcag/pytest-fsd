@@ -8,7 +8,7 @@ as other conventional segments (ui, model, api, lib, config).
 import os
 from typing import List
 
-from ..._lib.fs_utils import STANDARD_SEGMENTS, get_canonical_layer
+from ..._lib.fs_utils import is_ignored_directory, STANDARD_SEGMENTS, get_canonical_layer
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -34,7 +34,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             # В слайсовых слоях сегменты лежат внутри слайсов
             for slice_name in os.listdir(layer_path):
                 slice_path = os.path.join(layer_path, slice_name)
-                if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+                if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                     continue
                 _check_segments_subfolders(
                     slice_path, f"{layer}/{slice_name}", violations
@@ -49,12 +49,12 @@ def _check_segments_subfolders(
     """Check subfolders of segments inside a given parent path recursively."""
     for segment_name in os.listdir(parent_path):
         segment_path = os.path.join(parent_path, segment_name)
-        if not os.path.isdir(segment_path) or segment_name.startswith("_"):
+        if not os.path.isdir(segment_path) or is_ignored_directory(segment_name):
             continue
 
         for root_dir, dirs, _ in os.walk(segment_path):
             # Игнорируем скрытые папки
-            dirs[:] = [d for d in dirs if not d.startswith("_")]
+            dirs[:] = [d for d in dirs if not is_ignored_directory(d)]
 
             for subfolder in dirs:
                 if subfolder in STANDARD_SEGMENTS:

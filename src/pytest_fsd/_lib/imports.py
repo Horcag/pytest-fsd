@@ -7,6 +7,7 @@ from typing import Iterator, List, Optional, Tuple
 
 from .ast_utils import get_node_location, parse_python_file
 from .dynamic_imports import analyze_imports
+from .fs_utils import is_ignored_directory
 from ..config import FsdConfig
 
 
@@ -74,7 +75,7 @@ def iter_imports(
     """Yield local source/target components and diagnostic locations."""
     base_dir = os.path.join(project_root, config.base_path)
     for root, dirs, files in os.walk(base_dir):
-        dirs[:] = sorted(d for d in dirs if d != "__pycache__")
+        dirs[:] = sorted(d for d in dirs if not is_ignored_directory(d))
         for filename in sorted(files):
             if not filename.endswith(".py"):
                 continue

@@ -6,8 +6,8 @@ import os
 from typing import List
 
 from ..._lib.ast_utils import get_node_location, parse_python_file
-from ..._lib.fs_utils import get_layer_by_canonical_name
 from ..._lib.dynamic_imports import analyze_imports
+from ..._lib.fs_utils import get_layer_by_canonical_name, is_ignored_directory
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -47,8 +47,9 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             )
         )
 
-    for root, _, files in os.walk(app_path):
-        for file in files:
+    for root, dirs, files in os.walk(app_path):
+        dirs[:] = sorted(name for name in dirs if not is_ignored_directory(name))
+        for file in sorted(files):
             if not file.endswith(".py"):
                 continue
 

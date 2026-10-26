@@ -11,6 +11,11 @@ from ..config import FsdConfig
 STANDARD_SEGMENTS = ("ui", "model", "api", "lib", "config")
 
 
+def is_ignored_directory(name: str) -> bool:
+    """Ignore filesystem metadata, never legitimate underscore packages."""
+    return name.startswith(".") or name == "__pycache__"
+
+
 def get_canonical_layer(layer_name: str) -> str:
     """Return the layer name without ordering prefixes (e.g., '6_shared' -> 'shared')."""
     # Remove leading digits and underscores
@@ -42,5 +47,5 @@ def get_slices(layer: str, base_path: str) -> List[str]:
     return [
         d
         for d in os.listdir(path)
-        if os.path.isdir(os.path.join(path, d)) and not d.startswith("_")
+        if os.path.isdir(os.path.join(path, d)) and not is_ignored_directory(d)
     ]

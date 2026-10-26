@@ -48,7 +48,10 @@ def load_config(root_dir: str) -> FsdConfig:
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
-    tool_config = data.get("tool", {}).get("pytest_fsd", {})
+    tool_table = data.get("tool", {})
+    if not isinstance(tool_table, dict):
+        raise ValueError("[tool] must be a table for pytest_fsd configuration")
+    tool_config = tool_table.get("pytest_fsd", {})
     if not isinstance(tool_config, dict):
         raise ValueError("[tool.pytest_fsd] must be a table")
     unknown = set(tool_config) - {"base_path", "layers", "ignore_paths", "extra_rules"}
@@ -69,6 +72,8 @@ def load_config(root_dir: str) -> FsdConfig:
             raise ValueError("pytest_fsd.layers must be nonempty and contain no duplicates")
         if any(layer in (".", "..") or any(char in layer for char in "/\\.") for layer in layers):
             raise ValueError("pytest_fsd.layers must contain directory names, not paths")
+        if "__pycache__" in layers:
+            raise ValueError("pytest_fsd.layers cannot include reserved metadata directory '__pycache__'")
     unknown_rules = set(tool_config.get("extra_rules", [])) - AVAILABLE_EXTRA_RULES
     if unknown_rules:
         raise ValueError(f"Unknown pytest_fsd extra_rules: {', '.join(sorted(unknown_rules))}")

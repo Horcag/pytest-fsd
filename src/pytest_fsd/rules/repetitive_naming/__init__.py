@@ -8,7 +8,7 @@ For example, inside features/user there should be no user_model.py.
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.fs_utils import is_ignored_directory, get_sliced_layers
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -31,10 +31,11 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for slice_name in os.listdir(layer_path):
             slice_path = os.path.join(layer_path, slice_name)
-            if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+            if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                 continue
 
-            for root, _, files in os.walk(slice_path):
+            for root, dirs, files in os.walk(slice_path):
+                dirs[:] = [d for d in dirs if not is_ignored_directory(d)]
                 for file in files:
                     if not file.endswith(".py") or file == "__init__.py":
                         continue

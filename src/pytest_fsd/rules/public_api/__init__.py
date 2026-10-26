@@ -8,7 +8,11 @@ that serves as its public API definition.
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_layer_by_canonical_name, get_sliced_layers
+from ..._lib.fs_utils import (
+    get_layer_by_canonical_name,
+    get_sliced_layers,
+    is_ignored_directory,
+)
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -29,7 +33,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for slice_name in os.listdir(layer_path):
             slice_path = os.path.join(layer_path, slice_name)
-            if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+            if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                 continue
 
             init_file = os.path.join(slice_path, "__init__.py")
@@ -50,7 +54,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
         if os.path.isdir(shared_path):
             for segment_name in os.listdir(shared_path):
                 segment_path = os.path.join(shared_path, segment_name)
-                if not os.path.isdir(segment_path) or segment_name.startswith("_"):
+                if not os.path.isdir(segment_path) or is_ignored_directory(segment_name):
                     continue
 
                 if segment_name in ("ui", "lib"):
@@ -58,7 +62,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
                     # Но если внутри есть подпапки, они должны иметь __init__.py
                     for child in os.listdir(segment_path):
                         child_path = os.path.join(segment_path, child)
-                        if os.path.isdir(child_path) and not child.startswith("_"):
+                        if os.path.isdir(child_path) and not is_ignored_directory(child):
                             child_init = os.path.join(child_path, "__init__.py")
                             if not os.path.isfile(child_init):
                                 violations.append(

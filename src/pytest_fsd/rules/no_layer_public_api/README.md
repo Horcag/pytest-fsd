@@ -28,3 +28,7 @@ These directories serve as grouping containers for slices — they are not packa
 ## Rationale
 
 Having `__init__.py` in a layer directory misleads developers into thinking it is a module with its own API. Layers in FSD are purely structural containers.
+
+## Scope
+
+The check applies to direct children of configured sliced layers, including custom layer names and numeric ordering prefixes. The `app` and `shared` layers are exempt. Nested slice implementation directories are outside this rule.

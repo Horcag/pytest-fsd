@@ -29,3 +29,5 @@ __all__ = ["User"]
 The rule examines import syntax without executing modules. It reports each wildcard statement with one-based line and character column positions and an exclusive end position. Conditional imports, including `if TYPE_CHECKING:`, are checked too. Unreadable files and files with invalid Python syntax produce a diagnostic with the underlying error.
 
 Python's `from . import model as model` explicitly imports one module and is allowed. It does not copy all of that module's names into the package namespace, so it is not treated as JavaScript's `export * as model`.
+
+Resolvable programmatic imports with a wildcard fromlist and literal executed wildcard imports are checked at their original call locations. Hidden directories and `__pycache__` are excluded; underscore-prefixed Python packages remain in scope.

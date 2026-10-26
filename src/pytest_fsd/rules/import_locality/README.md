@@ -1,6 +1,6 @@
 # `import-locality`
 
-> 🔶 **Covered by Ruff.** This rule is NOT part of `pytest-fsd` core checks, but is fully enforceable via Ruff's `TID` (flake8-tidy-imports) plugin.
+> 🔶 **Not implemented in pytest-fsd.** Ruff's `TID` rules can restrict imports, but they do not implement slice-aware FSD locality.
 
 Require that imports **within the same slice** be relative, and imports **from another slice** be absolute.
 

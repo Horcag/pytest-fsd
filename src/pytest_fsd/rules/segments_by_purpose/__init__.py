@@ -8,7 +8,7 @@ not their nature (utils, helpers, components, hooks).
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_canonical_layer
+from ..._lib.fs_utils import is_ignored_directory, get_canonical_layer
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -94,7 +94,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             # Для остальных слоев сегменты лежат внутри слайсов
             for slice_name in os.listdir(layer_path):
                 slice_path = os.path.join(layer_path, slice_name)
-                if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+                if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                     continue
                 _check_entries_in_dir(slice_path, slice_name, violations)
 
@@ -111,7 +111,7 @@ def _check_entries_in_dir(
         return
 
     for entry in entries:
-        if entry.startswith("_"):
+        if is_ignored_directory(entry):
             continue
 
         entry_path = os.path.join(parent_path, entry)

@@ -8,7 +8,10 @@ folder-based segments (e.g., model/ directory).
 import os
 from typing import List
 
-from ..._lib.fs_utils import get_sliced_layers
+from ..._lib.fs_utils import (
+    get_sliced_layers,
+    is_ignored_directory,
+)
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -28,11 +31,15 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for slice_name in os.listdir(layer_path):
             slice_path = os.path.join(layer_path, slice_name)
-            if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+            if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                 continue
 
             for file in os.listdir(slice_path):
-                if not file.endswith(".py") or file == "__init__.py":
+                if (
+                    not file.endswith(".py")
+                    or file == "__init__.py"
+                    or not os.path.isfile(os.path.join(slice_path, file))
+                ):
                     continue
                 file_body = file[:-3]
                 violations.append(
@@ -54,7 +61,11 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
             continue
             
         for file in os.listdir(layer_path):
-            if not file.endswith(".py") or file == "__init__.py":
+            if (
+                not file.endswith(".py")
+                or file == "__init__.py"
+                or not os.path.isfile(os.path.join(layer_path, file))
+            ):
                 continue
             file_body = file[:-3]
             violations.append(

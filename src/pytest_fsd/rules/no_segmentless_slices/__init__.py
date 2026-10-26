@@ -8,7 +8,11 @@ Every slice must contain at least one standard FSD segment
 import os
 from typing import List
 
-from ..._lib.fs_utils import STANDARD_SEGMENTS, get_sliced_layers
+from ..._lib.fs_utils import (
+    STANDARD_SEGMENTS,
+    get_sliced_layers,
+    is_ignored_directory,
+)
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -31,7 +35,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for slice_name in os.listdir(layer_path):
             slice_path = os.path.join(layer_path, slice_name)
-            if not os.path.isdir(slice_path) or slice_name.startswith("_"):
+            if not os.path.isdir(slice_path) or is_ignored_directory(slice_name):
                 continue
 
             has_segments = False

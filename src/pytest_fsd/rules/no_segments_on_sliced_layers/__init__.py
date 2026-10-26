@@ -8,7 +8,11 @@ not direct segment folders like ui/, api/, model/.
 import os
 from typing import List
 
-from ..._lib.fs_utils import STANDARD_SEGMENTS, get_sliced_layers
+from ..._lib.fs_utils import (
+    STANDARD_SEGMENTS,
+    get_sliced_layers,
+    is_ignored_directory,
+)
 from ..._lib.violations import Violation
 from ...config import FsdConfig
 
@@ -28,7 +32,7 @@ def check(config: FsdConfig, project_root: str) -> List[Violation]:
 
         for child_name in os.listdir(layer_path):
             child_path = os.path.join(layer_path, child_name)
-            if not os.path.isdir(child_path) or child_name.startswith("_"):
+            if not os.path.isdir(child_path) or is_ignored_directory(child_name):
                 continue
 
             # Если имя папки совпадает с именем стандартного сегмента — это нарушение

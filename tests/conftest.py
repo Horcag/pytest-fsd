@@ -70,15 +70,6 @@ def create_project(tmp_path: Path):
 
         parse_steiger_tree(src_dir, tree_str)
         
-        # Add tmp_path to sys.path so pytest_archon can import the modules
-        import sys
-        sys.path.insert(0, str(tmp_path))
-        
         return tmp_path
 
-    yield _create_project
-    
-    # Cleanup sys.path after tests (approximate cleanup)
-    import sys
-    if str(tmp_path) in sys.path:
-        sys.path.remove(str(tmp_path))
+    return _create_project

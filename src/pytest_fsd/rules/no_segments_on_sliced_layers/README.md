@@ -27,3 +27,7 @@ These layers must contain only **slices** (domain-meaningful subfolders).
 ## Rationale
 
 The name `api` is conventionally a segment in FSD. When you see it as a direct child of a sliced layer, it's either a poorly named slice (confusing) or code that ended up unsliced (a violation of FSD structure).
+
+## Scope
+
+The check applies to direct children of configured sliced layers, including custom layer names and numeric ordering prefixes. The `app` and `shared` layers are exempt. Nested slice implementation directories are outside this rule.
